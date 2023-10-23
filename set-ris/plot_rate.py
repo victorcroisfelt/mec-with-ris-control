@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 
 # Load data
-data = loadmat('data/D500.mat')
+data = loadmat('data/set-ris_500_45deg.mat')
 
 # Get probability vector
 proba_vec = data['proba_vec'].squeeze()
@@ -14,33 +14,25 @@ proba_vec = data['proba_vec'].squeeze()
 avg_delay = data['avg_delay']
 avg_delay = avg_delay.mean(axis=0)
 
-# Get average rate
-rate = data['rate']
-rate = rate.mean(axis=0)
-
-# Lyapunov Constant
+# Constant
 V1 = np.array([1e8, 1e9, 2e9, 3e10])
-labels = ['1e8', '1e9', '2e9', '3e10']
 
-fig, axes = plt.subplots(ncols=2)
+fig, ax = plt.subplots()
 
 for vv, V in enumerate(V1):
-    axes[0].plot(proba_vec, avg_delay[:, vv], label='V =' + str(labels[vv]))
-    axes[1].plot(proba_vec, rate[:, vv])
+    ax.plot(proba_vec, avg_delay[:, vv], label='V =' +str(V1[vv]))
 
-axes[0].set_xlabel('Probability of losing SET-R')
-axes[0].set_ylabel('Average Delay')
+ax.set_xlabel('Probability of losing SET-R')
+ax.set_ylabel('Average Delay')
 
-axes[1].set_xlabel('Probability of losing SET-R')
-axes[1].set_ylabel('Average Rate')
-
-axes[1].set_yscale('log')
-
-axes[0].legend()
+ax.legend()
 
 plt.tight_layout()
 plt.show()
 
+
+
+breakpoint()
 # # Number of users
 # K = 2
 #

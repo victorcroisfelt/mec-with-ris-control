@@ -30,6 +30,6 @@ for pp = 1:length(proba_vec)
 
 end
 
-string = 'data/set-ris_D' + num2str(D) + '_nodirect.mat';
+string = 'data/D' + num2str(D) + '.mat';
 
 save(string)
