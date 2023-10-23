@@ -1,4 +1,4 @@
-function [avg_delay, ] = RIS_MEC_Control_UL_siso(angle, proba)
+function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
 
     % DATA
     K = 1;                                         % Number of Users
@@ -57,7 +57,7 @@ function [avg_delay, ] = RIS_MEC_Control_UL_siso(angle, proba)
     Nt = 1;                 % Number of TX antennas
     Nr = 1;                 % Number of RX antennas       
     rice_fac = 3;           % Rician factor    
-    D = 500;                % TX-RX distance
+    %D = 500;                % TX-RX distance
     dist_ris = 0;          % RIS distance from TX
     lt = 20;                % TX position 
     lr = 100;               % RX position      
@@ -67,12 +67,13 @@ function [avg_delay, ] = RIS_MEC_Control_UL_siso(angle, proba)
     overall_channel_RIS_AP_up = overall_channel_user_RIS_up;
     overall_channel_AP_up = zeros(K, N_slot);
     for qq = 1:N_slot
-            [Hdirt, H1t, H2t] = channel_mat_RIS(Nt, Nr, N_RIS, lt, lr, D, K, rice_fac, f, dist_ris, pi/2 , alpha_dir);
+            [Hdirt, H1t, H2t] = channel_mat_RIS(Nt, Nr, N_RIS, lt, lr, D, K, rice_fac, f, dist_ris, angle , alpha_dir);
             overall_channel_user_RIS_up(:, :, qq) = cell2mat(H1t);
             overall_channel_RIS_AP_up(:, :, qq) = cell2mat(H2t')';
             overall_channel_AP_up(:, qq) = cell2mat(Hdirt);
     end
-    
+    overall_channel_AP_up(:, :) = 0;
+
     % % eventual additional blockage pathloss on DIRECT link
     % add_pathloss = 20;                        % Deep fading in dB
     % add_pathloss = 10^(add_pathloss/10);
@@ -85,11 +86,19 @@ function [avg_delay, ] = RIS_MEC_Control_UL_siso(angle, proba)
     Z_tot = zeros(K, N_slot, length(V1)); avg_delay_tot = Z_tot; tot_queues_ue = zeros(K, N_slot, length(V1)); 
     total_energy = zeros(length(V1), num_iter); avg_delay = total_energy; total_energy_mec = total_energy; total_energy_AP = total_energy; total_energy_RIS = total_energy;
     
+    % Prepare to save save rate 
+    rate_up_hist = zeros(K, N_slot, length(V1));
+
+
     %% Optimization Algorithm
     for iter = 1:num_iter
-         Q_local = zeros(K, N_slot, length(V1)); Q_MEH = Q_local;
+
+         Q_local = zeros(K, N_slot, length(V1));
+         Q_MEH = Q_local;
+         
          Z = zeros(K, N_slot, length(V1)); Y = Z; arrivals = Z;
          rand('state',iter); randn('state',iter)
+
          % Loop over trade-off parameter V 
          for vv = 1:length(V1)
             V = V1(vv);       
@@ -98,7 +107,7 @@ function [avg_delay, ] = RIS_MEC_Control_UL_siso(angle, proba)
             for nn = 1:N_slot
                 % shallow slot counting
                 if mod(nn, 200) == 0
-                    nn
+                    %nn
                 end
                 A = A1(:, nn);            
                 
@@ -106,8 +115,11 @@ function [avg_delay, ] = RIS_MEC_Control_UL_siso(angle, proba)
                 [power_up, rate_up, freq_MEH, power_mec, current_v, power_RIS] = optimization_RIS(K, B_u,...
                     Q_local(:, nn, vv), Q_MEH(:, nn, vv), Z(:, nn, vv), qtz_RIS, N_RIS, N_blocks,...
                     overall_channel_user_RIS_up(:, :, nn), overall_channel_RIS_AP_up(:, :, nn), overall_channel_AP_up(:, nn),...
-                    N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha);
+                    N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha, proba);
                 
+                % Save rate 
+                rate_up_hist(:, nn, vv) = rate_up;
+
                 % Physical queues update          
                 Q_local(:, nn+1, vv) = max(0, Q_local(:,nn,vv) - delta * rate_up) + A;
                 Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn, vv), delta * rate_up);
@@ -131,15 +143,21 @@ function [avg_delay, ] = RIS_MEC_Control_UL_siso(angle, proba)
             total_energy_RIS(vv, iter) = mean(energy_tot_RIS(Msample:N_slot, vv));
             avg_delay(vv, iter) = max(mean(tot_queues_ue(:, Msample:N_slot, vv), 2) ./ A_avg * total_delta * 1e3);
          end
+        
+         for vv = 1:length(V1)
+            final_energy(vv) = mean(total_energy(vv,:));
+            final_energy_AP(vv) = mean(total_energy_AP(vv,:));
+            final_energy_mec(vv) = mean(total_energy_mec(vv,:));
+            final_energy_RIS(vv) = mean(total_energy_RIS(vv,:));
+            final_delay(vv) = mean(avg_delay(vv,:));
+        end
 
-
-         
         %%% eventual average over multiple iterations
         Z_tot = Z_tot/num_iter;
         avg_delay_tot = avg_delay_tot/num_iter;
 
 
-
+        rate_up_hist = mean(rate_up_hist, 2);
 
     end
     

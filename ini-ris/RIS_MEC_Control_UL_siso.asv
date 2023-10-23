@@ -1,4 +1,4 @@
-function [avg_delay, energy] = RIS_MEC_Control_UL_siso(angle, proba)
+function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
 
     % DATA
     K = 1;                                         % Number of Users
@@ -57,7 +57,7 @@ function [avg_delay, energy] = RIS_MEC_Control_UL_siso(angle, proba)
     Nt = 1;                 % Number of TX antennas
     Nr = 1;                 % Number of RX antennas       
     rice_fac = 3;           % Rician factor    
-    D = 500;                % TX-RX distance
+    %D = 500;                % TX-RX distance
     dist_ris = 0;          % RIS distance from TX
     lt = 20;                % TX position 
     lr = 100;               % RX position      
@@ -85,11 +85,19 @@ function [avg_delay, energy] = RIS_MEC_Control_UL_siso(angle, proba)
     Z_tot = zeros(K, N_slot, length(V1)); avg_delay_tot = Z_tot; tot_queues_ue = zeros(K, N_slot, length(V1)); 
     total_energy = zeros(length(V1), num_iter); avg_delay = total_energy; total_energy_mec = total_energy; total_energy_AP = total_energy; total_energy_RIS = total_energy;
     
+    % Prepare to save save rate 
+    rate_up_hist = zeros(K, N_slot, length(V1));
+
+
     %% Optimization Algorithm
     for iter = 1:num_iter
-         Q_local = zeros(K, N_slot, length(V1)); Q_MEH = Q_local;
+
+         Q_local = zeros(K, N_slot, length(V1));
+         Q_MEH = Q_local;
+         
          Z = zeros(K, N_slot, length(V1)); Y = Z; arrivals = Z;
          rand('state',iter); randn('state',iter)
+
          % Loop over trade-off parameter V 
          for vv = 1:length(V1)
             V = V1(vv);       
@@ -108,6 +116,9 @@ function [avg_delay, energy] = RIS_MEC_Control_UL_siso(angle, proba)
                     overall_channel_user_RIS_up(:, :, nn), overall_channel_RIS_AP_up(:, :, nn), overall_channel_AP_up(:, nn),...
                     N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha, proba);
                 
+                % Save rate 
+                rate_up_hist(:, nn, vv) = rate_up;
+
                 % Physical queues update          
                 Q_local(:, nn+1, vv) = max(0, Q_local(:,nn,vv) - delta * rate_up) + A;
                 Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn, vv), delta * rate_up);
@@ -143,6 +154,9 @@ function [avg_delay, energy] = RIS_MEC_Control_UL_siso(angle, proba)
         %%% eventual average over multiple iterations
         Z_tot = Z_tot/num_iter;
         avg_delay_tot = avg_delay_tot/num_iter;
+
+
+        rate_up_hist = mean(rate_up_his);
 
     end
     

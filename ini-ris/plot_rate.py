@@ -5,13 +5,31 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 
 # Load data
-data = loadmat('data/set-ris.mat')
+data = loadmat('data/set-ris_500_45deg.mat')
 
 # Get probability vector
-proba_vec = data['proba_vec']
+proba_vec = data['proba_vec'].squeeze()
 
 # Get average delay
 avg_delay = data['avg_delay']
+avg_delay = avg_delay.mean(axis=0)
+
+# Constant
+V1 = np.array([1e8, 1e9, 2e9, 3e10])
+
+fig, ax = plt.subplots()
+
+for vv, V in enumerate(V1):
+    ax.plot(proba_vec, avg_delay[:, vv], label='V =' +str(V1[vv]))
+
+ax.set_xlabel('Probability of losing SET-R')
+ax.set_ylabel('Average Delay')
+
+ax.legend()
+
+plt.tight_layout()
+plt.show()
+
 
 
 breakpoint()
@@ -28,18 +46,7 @@ breakpoint()
 #
 # rates = np.array(rates)
 #
-# fig, ax = plt.subplots()
-#
-# ax.plot(prob_vec, rates[:, 0], label='UE 1')
-# ax.plot(prob_vec, rates[:, 1], label='UE 2')
-#
-# ax.set_xlabel('probability of losing INI-R')
-# ax.set_ylabel('UL rate')
-#
-# ax.legend()
-#
-# plt.tight_layout()
-# plt.show()
+
 #
 # #ax.plot(prob_vec,)
 #
