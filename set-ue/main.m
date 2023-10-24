@@ -30,6 +30,6 @@ for pp = 1:length(proba_vec)
 
 end
 
-string = [data/D' num2str(D) '.mat'];
+string = ['data/D' num2str(D) '.mat'];
 
 save(string)
