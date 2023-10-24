@@ -72,12 +72,11 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
             overall_channel_RIS_AP_up(:, :, qq) = cell2mat(H2t')';
             overall_channel_AP_up(:, qq) = cell2mat(Hdirt);
     end
-    overall_channel_AP_up(:, :) = 0;
 
     % % eventual additional blockage pathloss on DIRECT link
-    % add_pathloss = 20;                        % Deep fading in dB
-    % add_pathloss = 10^(add_pathloss/10);
-    % overall_channel_AP_up = overall_channel_AP_up/sqrt(add_pathloss);
+    add_pathloss = 20; % DeepA fading in dB
+    add_pathloss = 10^(add_pathloss/10);
+    overall_channel_AP_up = overall_channel_AP_up/sqrt(add_pathloss);
     % !!! be carefull to select in case the rigth parameter V1 !!!
     % maybe it should be necessary to change also TX/RX positions and distance
     
@@ -110,13 +109,17 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
                     %nn
                 end
                 A = A1(:, nn);            
-                
+      
                 % Optimization Function
                 [power_up, rate_up, freq_MEH, power_mec, current_v, power_RIS] = optimization_RIS(K, B_u,...
                     Q_local(:, nn, vv), Q_MEH(:, nn, vv), Z(:, nn, vv), qtz_RIS, N_RIS, N_blocks,...
                     overall_channel_user_RIS_up(:, :, nn), overall_channel_RIS_AP_up(:, :, nn), overall_channel_AP_up(:, nn),...
-                    N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha, proba);
-                
+                    N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha);
+
+                if rand() < proba
+                    rate_up = 0;
+                end
+
                 % Save rate 
                 rate_up_hist(:, nn, vv) = rate_up;
 

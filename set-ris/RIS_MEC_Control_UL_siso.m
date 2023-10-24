@@ -72,12 +72,11 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
             overall_channel_RIS_AP_up(:, :, qq) = cell2mat(H2t')';
             overall_channel_AP_up(:, qq) = cell2mat(Hdirt);
     end
-    overall_channel_AP_up(:, :) = 0;
 
     % % eventual additional blockage pathloss on DIRECT link
-    % add_pathloss = 20;                        % Deep fading in dB
-    % add_pathloss = 10^(add_pathloss/10);
-    % overall_channel_AP_up = overall_channel_AP_up/sqrt(add_pathloss);
+    add_pathloss = 20;                        % Deep fading in dB
+    add_pathloss = 10^(add_pathloss/10);
+    overall_channel_AP_up = overall_channel_AP_up/sqrt(add_pathloss);
     % !!! be carefull to select in case the rigth parameter V1 !!!
     % maybe it should be necessary to change also TX/RX positions and distance
     
@@ -88,7 +87,6 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
     
     % Prepare to save save rate 
     rate_up_hist = zeros(K, N_slot, length(V1));
-
 
     %% Optimization Algorithm
     for iter = 1:num_iter

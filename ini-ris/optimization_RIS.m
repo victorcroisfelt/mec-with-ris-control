@@ -3,7 +3,7 @@ function [optimal_power_up, optimal_rate_up, freq_MEH, power_mec, current_v, pow
     optimization_RIS( ...
         K, B_u, Q_local, Q_MEH, Z, qtz_RIS, N_RIS, N_blocks, channel_RIS_up,...
         channel_RIS_AP_up, channel_AP_up, N0, V, Pt, possible_f, J, delta,...
-        p_bit, kappa, alpha, proba)
+        p_bit, kappa, alpha)
 
     % Rate Optimization
     Q_tilde_up = B_u * (Q_local - Q_MEH + Z);
@@ -14,19 +14,10 @@ function [optimal_power_up, optimal_rate_up, freq_MEH, power_mec, current_v, pow
     current_v = zeros(N_RIS, 1);
     current_v = Greedy_RIS(current_v, N_blocks, N_RIS, possible_v, K, channel_RIS_up, channel_RIS_AP_up,...
            channel_AP_up, N0, B_u, V, Q_tilde_up, p_bit, alpha);
-    
-    proba = proba;
-    toss_coins = rand(K, 1);
-    config_v = zeros(N_RIS, 1);%dftmtx();
-
+  
     overall_channel_RIS_up = zeros(K, 1); channel_over_noise_up = zeros(K, 1);
     for kk = 1:K
-        
-        if toss_coins(kk) < proba      
-            overall_channel_RIS_up(kk) = overall_channel_RIS_up(kk) + (channel_RIS_up(:, kk).' * diag(config_v) * channel_RIS_AP_up(:, kk));
-        else
-            overall_channel_RIS_up(kk) = overall_channel_RIS_up(kk) + (channel_RIS_up(:, kk).' * diag(current_v) * channel_RIS_AP_up(:, kk));
-        end
+        overall_channel_RIS_up(kk) = overall_channel_RIS_up(kk) + (channel_RIS_up(:, kk).' * diag(current_v) * channel_RIS_AP_up(:, kk));
         channel_over_noise_up(kk, 1) = abs(channel_AP_up(kk) + overall_channel_RIS_up(kk)) .^2 / (N0*B_u);
         
         % Uplink 
@@ -34,6 +25,7 @@ function [optimal_power_up, optimal_rate_up, freq_MEH, power_mec, current_v, pow
         p_max(kk) = 1 ./ channel_over_noise_up(kk) .* (exp(rate_max_up(kk) * log(2) / B_u) - 1);
         optimal_power_up(kk,1) = min(max(0, Q_tilde_up(kk) / (alpha * V * log(2)) - 1 ./ (channel_over_noise_up(kk))), p_max(kk));          
     end
+    
     optimal_power_up(Q_tilde_up<=0) = 0;
     optimal_rate_up = B_u * log2(1 + channel_over_noise_up .* optimal_power_up);
     power_RIS = p_bit * sum(abs(current_v));

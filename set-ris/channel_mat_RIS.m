@@ -14,7 +14,6 @@ function [Hdir, H1, H2] = channel_mat_RIS(Nt, Nr, Nris, lt, lr, D, no_mat, K, f,
     tx_arr(3,:) = zeros(1,Nt); 
     
     % RX antenna array
-    D = 500;
     y_dim = D * sin(angle);
     x_dim = D * cos(angle);
     

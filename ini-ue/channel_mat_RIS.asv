@@ -1,5 +1,5 @@
 %%% CHANNEL %%%
-function [Hdir, H1, H2] = channel_mat_RIS(Nt, Nr, Nris, lt, lr, D, no_mat, K, f, dist_ris, angle, varargin)
+function [Hdir, H1, H2] = channel_mat_RIS(Nt, Nr, Nris, lt, lr, D, no_mat, K, f, dist_ris, varargin)
     % data
     lambda = 3e8/f;     % Wavelength
     dt = lambda/2;      % TX antenna space
@@ -9,20 +9,17 @@ function [Hdir, H1, H2] = channel_mat_RIS(Nt, Nr, Nris, lt, lr, D, no_mat, K, f,
     % Geometrical placement, x, y and z axis 
     
     % TX antenna array
-    tx_arr(1,:) = zeros(1,Nt) - sqrt(200); 
-    tx_arr(2,:) = (sort(0:Nt-1,'descend')-(Nt-1)/2)*dt - sqrt(200); 
+    tx_arr(1,:) = zeros(1,Nt) + (); 
+    tx_arr(2,:) = (sort(0:Nt-1,'descend')-(Nt-1)/2)*dt + lt; 
     tx_arr(3,:) = zeros(1,Nt); 
     
     % RX antenna array
-    y_dim = D * sin(angle);
-    x_dim = D * cos(angle);
-    
-    rx_arr(1,:) = ones(1,Nr) + x_dim;
-    rx_arr(2,:) = (sort(0:Nr-1,'descend')-(Nr-1)/2)*dr + y_dim; 
-    rx_arr(3,:) = zeros(1,Nr);       
+    rx_arr(1,:) = D*ones(1,Nr);
+    rx_arr(2,:) = (sort(0:Nr-1,'descend')-(Nr-1)/2)*dr + lr; 
+    rx_arr(3,:) = zeros(1,Nr);
     
     % RIS 
-    center = [0 0]; %[dist_ris 0]; % RIS center position 
+    center = [dist_ris 0]; % RIS center position 
     N1 = sqrt(Nris);
     N2 = N1;                                    % Number of RIS elements in two dimensions N1 and N2
     ris_pos = RISPosition(N1,N2,dris,center);   % RIS elements' coordinates 

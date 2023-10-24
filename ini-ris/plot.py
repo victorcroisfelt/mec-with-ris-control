@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 
 # Load data
-data = loadmat('set-ris.mat')
+data = loadmat('data/ini-ris.mat')
 
 # Get probability vector
 proba_vec = data['proba_vec'].squeeze()
@@ -28,10 +28,10 @@ for vv, V in enumerate(V1):
     axes[0].plot(proba_vec, avg_delay[:, vv], label='V =' + str(labels[vv]))
     axes[1].plot(proba_vec, rate[:, vv])
 
-axes[0].set_xlabel('Probability of losing SET-R')
+axes[0].set_xlabel('Probability of losing INI-R')
 axes[0].set_ylabel('Average Delay')
 
-axes[1].set_xlabel('Probability of losing SET-R')
+axes[1].set_xlabel('Probability of losing INI-R')
 axes[1].set_ylabel('Average Rate')
 
 axes[1].set_yscale('log')
@@ -40,7 +40,7 @@ axes[0].legend()
 
 plt.tight_layout()
 
-plt.savefig('figs/set-ris_D500.pdf')
+plt.savefig('figs/ini-ris_D500.pdf')
 
 plt.show()
 
