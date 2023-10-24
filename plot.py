@@ -20,7 +20,7 @@ fig, ax = plt.subplots()
 for ff, file in enumerate(files):
 
     # Load data
-    data = loadmat('mat/' + file + '.mat')
+    data = loadmat('data/' + file + '.mat')
 
     if ff == 0:
 

@@ -15,8 +15,8 @@ rate = zeros(length(angles_vec), 4);
 %    proba = proba_vec(pp);
     
 
-tau = 125e-3
-k = 1;
+tau = 400e-3
+k = 4;
 T = k * 1/14 * 10e-3;
 
 tic

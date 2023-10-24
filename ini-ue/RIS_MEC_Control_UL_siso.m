@@ -143,12 +143,9 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
                 end
                 Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn, vv), delta * rate_up);
 
-
                 % Save rate 
                 rate_up_hist(:, nn, vv) = rate_up;
 
-
-                
                 % Virtual queues update
                 Z(:, nn+1, vv) = max(0, Z(:, nn, vv) + Q_local(:, nn+1, vv) + Q_MEH(:, nn+1, vv) - Q_avg);
                 Z_tot(:, nn, vv) = Z_tot(:, nn, vv) + Z(:, nn, vv); 
@@ -158,8 +155,6 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
                 energy_tot_AP(nn, vv) = delta * (p_AP_on * max(power_up>0)) + delta_signaling * (p_AP_on + p_AP_tx);
                 energy_tot_mec(nn, vv) = delta * power_mec + delta_signaling * kappa * min_poss_fm^3;
                 energy_tot_RIS(nn, vv) = delta * power_RIS + delta_signaling * p_bit * N_RIS;        
-
-
                 
                 tot_queues_ue(:, nn, vv) = Q_real + Q_MEH(:, nn, vv);
                 avg_delay_tot(:, nn, vv) = avg_delay_tot(:, nn, vv) + mean(tot_queues_ue(:, nn - min(nn, 1e3) + 1:nn, vv), 2) ./ A_avg * delta * 1e3;
