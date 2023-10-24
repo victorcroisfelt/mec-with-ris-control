@@ -4,63 +4,64 @@ import matplotlib.pyplot as plt
 
 from scipy.io import loadmat
 
-# Load data
-data = loadmat('data/ini-ris.mat')
+# Files
+files = ['100_k1', '125_k1', '150_k1', '200_k1', '250_k1', '300_k1']
+#files = ['baseline', 'ini-ris', 'set-ris', 'set-ue']
 
-# Get probability vector
-proba_vec = data['proba_vec'].squeeze()
+labels = ['Baseline', 'INI-RIS', 'SET-RIS', 'INI-UE', 'SET-UE']
+#labels = ['Baseline', 'INI-RIS', 'SET-RIS', 'SET-UE']
 
-# Get average delay
-avg_delay = data['avg_delay']
-avg_delay = avg_delay.mean(axis=1)
-
-# Get average rate
-rate = data['rate']
-rate = rate.mean(axis=1)
-
-# Lyapunov Constant
+# Constant
 V1 = np.array([1e8, 1e9, 2e9, 3e10])
-labels = ['1e8', '1e9', '2e9', '3e10']
 
-fig, axes = plt.subplots(ncols=2)
+fig, ax = plt.subplots()
 
-for vv, V in enumerate(V1):
-    axes[0].plot(proba_vec, avg_delay[:, vv], label='V =' + str(labels[vv]))
-    axes[1].plot(proba_vec, rate[:, vv])
+y_axis = []
+x_axis = [100, 125, 150, 200, 250, 300]
 
-axes[0].set_xlabel('Probability of losing INI-R')
-axes[0].set_ylabel('Average Delay')
+# Go through the files
+for ff, file in enumerate(files):
 
-axes[1].set_xlabel('Probability of losing INI-R')
-axes[1].set_ylabel('Average Rate')
+    # Load data
+    data = loadmat(file + '.mat')
 
-axes[1].set_yscale('log')
+    # Compute average and take maximum
+    avg_delay = np.mean(data['avg_delay'], axis=0).min()
 
-axes[0].legend()
+    y_axis.append(avg_delay)
+
+ax.plot(x_axis, y_axis)
+
+
+#     if ff == 0:
+#
+#         # Get average delay
+#         avg_delay = data['avg_delay']
+#         avg_delay = avg_delay.mean(axis=0)
+#
+#         ax.plot(np.linspace(0, 1, 11), np.max(avg_delay/1000, axis=-1) * np.ones(11), color='black', label=labels[ff])
+#
+#     else:
+#
+#         # Get probability vector
+#         proba_vec = data['proba_vec'].squeeze()
+#
+#         # Get average delay
+#         avg_delay = data['avg_delay']
+#         avg_delay = avg_delay.mean(axis=1)
+#
+#         if labels[ff] == 'INI-UE':
+#             ax.plot(proba_vec, np.flip(np.max(avg_delay/1000, axis=-1)), label=labels[ff])
+#         else:
+#             ax.plot(proba_vec, (np.max(avg_delay / 1000, axis=-1)), label=labels[ff])
+#
+#
+ax.set_yscale('log')
+
+ax.set_xlabel(r'Slot duration, $\tau$')
+ax.set_ylabel('Average delay [ms]')
+
+ax.legend()
 
 plt.tight_layout()
-
-plt.savefig('figs/ini-ris_D500.pdf')
-
 plt.show()
-
-# # Number of users
-# K = 2
-#
-# # Get rates
-# rates = []
-# for file in files:
-#
-#
-#
-#     rates.append(rate)
-#
-# rates = np.array(rates)
-#
-
-#
-# #ax.plot(prob_vec,)
-#
-# # Access the data in Python
-# #data = mat_data['data']
-# #print(data)
