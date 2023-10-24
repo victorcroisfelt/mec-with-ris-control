@@ -1,13 +1,14 @@
-function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
+function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, tau, T)
 
     % DATA
     K = 1;                                         % Number of Users
     N_slot = 3e3;                                  % Number of slots
     Msample = N_slot/2;                            % slot to avoid for the final average
-    total_delta = 10e-3;                           % Total slot duration
-    perc = .9;                                     % Percentage of slot duration dedicated to offloading
-    delta = total_delta .* perc;                   % Slot duration dedicated to offloading
-    delta_signaling = (1 - perc) * total_delta;    % Slot duration dedicated to control signaling
+    total_delta = tau;                           % Total slot duration
+    %perc = .9;                                     % Percentage of slot duration dedicated to offloading
+    %delta = total_delta .* perc;                   % Slot duration dedicated to offloading
+    %delta_signaling = (1 - perc) * total_delta;    % Slot duration dedicated to control signaling
+    
     alpha = 0.5;                                   % Weight of user and network energy consumption (e.g. 0.5 --> holistic strategy)
     num_iter = 1;                                  % number of iterations for possible sample average
     
@@ -22,7 +23,7 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
     
     %% RIS parameters 
     N_RIS = 100;                   % Number of RIS elements
-    N_blocks = 100;                % Number of blocks to reduce complexity (e.g. if N_RIS = 100 and N_blocks = 25, 4 elements together are optimized)
+    N_blocks = 25;                % Number of blocks to reduce complexity (e.g. if N_RIS = 100 and N_blocks = 25, 4 elements together are optimized)
     qtz_RIS = 1;                   % Number of bits used to quantize the phase
     if qtz_RIS == 1
         p_bit = .5e-3;             % Power consumption of a RIS element, depending on the number of bits
@@ -74,12 +75,32 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
     end
 
     % % eventual additional blockage pathloss on DIRECT link
-    add_pathloss = 20;                        % Deep fading in dB
+    add_pathloss = 20; % DeepA fading in dB
     add_pathloss = 10^(add_pathloss/10);
     overall_channel_AP_up = overall_channel_AP_up/sqrt(add_pathloss);
     % !!! be carefull to select in case the rigth parameter V1 !!!
     % maybe it should be necessary to change also TX/RX positions and distance
     
+    %% New Stuff
+    Ng = N_RIS / N_blocks;
+
+    tau_s = 1/14 * 10e-3;
+    tau_s = 0;
+
+    tau_sig = 2 * tau_s + 5 * T;
+    tau_ce = (tau_s + T)  * (N_RIS / Ng + 1);
+
+    mu = 5 * K * (6 * 1 * (1 + 5 * N_RIS^2) + 5 * (1+4 * N_RIS^2)) + N_RIS;
+    tau_ra = (4 + 1) * N_RIS / Ng * mu;
+    tau_ra = tau_ra / 4.5e9;
+
+    tau_overhead = tau_sig + tau_ce + tau_ra;
+
+    
+    perc = 1 - (tau_overhead / tau);                                     % Percentage of slot duration dedicated to offloading
+    delta = tau .* perc;                   % Slot duration dedicated to offloading
+    delta_signaling = (1 - perc) * tau;    % Slot duration dedicated to control signaling
+
     %% Structures Inizialization
     energy_tot = zeros(K, N_slot, length(V1)); energy_tot_mec = zeros(N_slot, length(V1)); energy_tot_AP = energy_tot_mec; energy_tot_RIS = energy_tot_mec; 
     Z_tot = zeros(K, N_slot, length(V1)); avg_delay_tot = Z_tot; tot_queues_ue = zeros(K, N_slot, length(V1)); 
@@ -98,11 +119,6 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
          Z = zeros(K, N_slot, length(V1)); Y = Z; arrivals = Z;
          rand('state',iter); randn('state',iter)
 
-
-         % Prepare to store
-         % power_up_old = 0;
-         % rate_up_old = 0;
-
          % Loop over trade-off parameter V 
          for vv = 1:length(V1)
             V = V1(vv);       
@@ -112,42 +128,21 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
                 % shallow slot counting
                 if mod(nn, 200) == 0
                     %nn
-                end
-                A = A1(:, nn); 
-   
+                end 
+                A = A1(:, nn);            
+      
                 % Optimization Function
                 [power_up, rate_up, freq_MEH, power_mec, current_v, power_RIS] = optimization_RIS(K, B_u,...
                     Q_local(:, nn, vv), Q_MEH(:, nn, vv), Z(:, nn, vv), qtz_RIS, N_RIS, N_blocks,...
                     overall_channel_user_RIS_up(:, :, nn), overall_channel_RIS_AP_up(:, :, nn), overall_channel_AP_up(:, nn),...
                     N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha);
 
-                % Toss coin
-                toss_coin = rand(1, 1);
-                Q_real =  max(0, Q_local(:,nn,vv) - delta * rate_up) + A;  
-
-                if toss_coin < proba
-                    if nn == 1
-                        % Physical queues update          
-                        Q_local(:, nn+1, vv) = max(0, 0 - delta * rate_up);
-                        %Q_MEH(:,nn+1,vv) = max(0, 0 - freq_MEH * delta .* J) + min(0, delta * rate_up);
-                    else
-                        % Physical queues update          
-                        Q_local(:, nn+1, vv) = max(0, Q_local(:,nn-1,vv) - delta * rate_up);
-                        %Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn-1,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn-1, vv), delta * rate_up);
-                    end
-
-                else
-                    % Physical queues update          
-                    Q_local(:, nn+1, vv) = Q_real;
-
-                end
-                Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn, vv), delta * rate_up);
-
-
                 % Save rate 
                 rate_up_hist(:, nn, vv) = rate_up;
 
-
+                % Physical queues update          
+                Q_local(:, nn+1, vv) = max(0, Q_local(:,nn,vv) - delta * rate_up) + A;
+                Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn, vv), delta * rate_up);
                 
                 % Virtual queues update
                 Z(:, nn+1, vv) = max(0, Z(:, nn, vv) + Q_local(:, nn+1, vv) + Q_MEH(:, nn+1, vv) - Q_avg);
@@ -158,10 +153,7 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
                 energy_tot_AP(nn, vv) = delta * (p_AP_on * max(power_up>0)) + delta_signaling * (p_AP_on + p_AP_tx);
                 energy_tot_mec(nn, vv) = delta * power_mec + delta_signaling * kappa * min_poss_fm^3;
                 energy_tot_RIS(nn, vv) = delta * power_RIS + delta_signaling * p_bit * N_RIS;        
-
-
-                
-                tot_queues_ue(:, nn, vv) = Q_real + Q_MEH(:, nn, vv);
+                tot_queues_ue(:, nn, vv) = Q_local(:, nn, vv) + Q_MEH(:, nn, vv);
                 avg_delay_tot(:, nn, vv) = avg_delay_tot(:, nn, vv) + mean(tot_queues_ue(:, nn - min(nn, 1e3) + 1:nn, vv), 2) ./ A_avg * delta * 1e3;
             end  
             

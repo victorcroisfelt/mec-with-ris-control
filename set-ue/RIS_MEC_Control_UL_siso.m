@@ -114,9 +114,6 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
                     %nn
                 end
                 A = A1(:, nn); 
-   
-              
-
 
                 % Optimization Function
                 [power_up, rate_up, freq_MEH, power_mec, current_v, power_RIS] = optimization_RIS(K, B_u,...
@@ -127,7 +124,7 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
                 % Toss coin
                 toss_coin = rand(1, 1);
 
-                if toss_coin > proba
+                if toss_coin < proba
                     power_up = power_up_old;
                     rate_up = rate_up_old;
                 end
