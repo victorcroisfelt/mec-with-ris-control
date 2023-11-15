@@ -6,6 +6,8 @@ from scipy.io import loadmat
 
 from scipy.interpolate import UnivariateSpline
 
+import tikzplotlib
+
 fig, ax = plt.subplots()
 
 for rr in range(2):
@@ -89,6 +91,6 @@ plt.tight_layout()
 
 # import tikzplotlib
 #
-# tikzplotlib.save("frame.tex")
+tikzplotlib.save("frame.tex")
 
 plt.show()

@@ -4,12 +4,11 @@ import matplotlib.pyplot as plt
 
 from scipy.io import loadmat
 
-# Files
-files = ['baseline', 'ini-ris', 'set-ris', 'ini-ue', 'set-ue']
-files = ['baseline', 'ini-ris2', 'set-ris2', 'set-ue']
+import tikzplotlib
 
+# Files
+files = ['baseline', 'ini-ris2', 'set-ris2', 'ini-ue4', 'set-ue3']
 labels = ['Baseline', 'INI-RIS', 'SET-RIS', 'INI-UE', 'SET-UE']
-labels = ['Baseline', 'INI-RIS', 'SET-RIS', 'SET-UE']
 
 # Constant
 V1 = np.array([1e8, 1e9, 2e9, 3e10])
@@ -40,7 +39,7 @@ for ff, file in enumerate(files):
         avg_delay = avg_delay.mean(axis=1)
 
         if labels[ff] == 'INI-UE':
-            ax.plot(proba_vec, np.flip(np.min(avg_delay/1000, axis=-1)), label=labels[ff])
+            ax.plot(proba_vec, np.min(avg_delay/1000, axis=-1), label=labels[ff])
         else:
             ax.plot(proba_vec, (np.min(avg_delay / 1000, axis=-1)), label=labels[ff])
 
@@ -53,4 +52,7 @@ ax.set_ylabel('Average Delay [ms]')
 ax.legend()
 
 plt.tight_layout()
+
+tikzplotlib.save("error_prob.tex")
+
 plt.show()

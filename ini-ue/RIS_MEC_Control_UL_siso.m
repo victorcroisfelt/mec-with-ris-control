@@ -92,8 +92,9 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
     %% Optimization Algorithm
     for iter = 1:num_iter
 
-         Q_local = zeros(K, N_slot, length(V1));
-         Q_MEH = Q_local;
+         Q_local = zeros(K, N_slot, length(V1));    % UE Queue at the AP
+         Q_real = zeros(K, N_slot, length(V1));     % UE Queue at the UE
+         Q_MEH = zeros(K, N_slot, length(V1));      % ES queue at the ES
          
          Z = zeros(K, N_slot, length(V1)); Y = Z; arrivals = Z;
          rand('state',iter); randn('state',iter)
@@ -121,26 +122,21 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
                     overall_channel_user_RIS_up(:, :, nn), overall_channel_RIS_AP_up(:, :, nn), overall_channel_AP_up(:, nn),...
                     N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha);
 
+                
+                
+                % Update the UE queue
+                Q_real(:, nn+1, vv) =  max(0, Q_real(:,nn,vv) - delta * rate_up) + A;  
+                
                 % Toss coin
-                toss_coin = rand(1, 1);
-                Q_real =  max(0, Q_local(:,nn,vv) - delta * rate_up) + A;  
-
-                if toss_coin < proba
-                    if nn == 1
-                        % Physical queues update          
-                        Q_local(:, nn+1, vv) = max(0, 0 - delta * rate_up);
-                        %Q_MEH(:,nn+1,vv) = max(0, 0 - freq_MEH * delta .* J) + min(0, delta * rate_up);
-                    else
-                        % Physical queues update          
-                        Q_local(:, nn+1, vv) = max(0, Q_local(:,nn-1,vv) - delta * rate_up);
-                        %Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn-1,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn-1, vv), delta * rate_up);
-                    end
-
+                toss_coin = rand(1, 1);                
+                if toss_coin < proba                    
+                    % No information to the AP: updating local queue with local info only
+                    Q_local(:, nn+1, vv) = max(0, Q_local(:,nn,vv) - delta * rate_up);                 
                 else
-                    % Physical queues update          
-                    Q_local(:, nn+1, vv) = Q_real;
-
+                    % Information to the AP successfully exchanged         
+                    Q_local(:, nn+1, vv) = Q_real(:, nn+1, vv);
                 end
+                % Updating ES queue
                 Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn, vv), delta * rate_up);
 
                 % Save rate 
@@ -156,7 +152,7 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, proba)
                 energy_tot_mec(nn, vv) = delta * power_mec + delta_signaling * kappa * min_poss_fm^3;
                 energy_tot_RIS(nn, vv) = delta * power_RIS + delta_signaling * p_bit * N_RIS;        
                 
-                tot_queues_ue(:, nn, vv) = Q_real + Q_MEH(:, nn, vv);
+                tot_queues_ue(:, nn, vv) = Q_real(:, nn, vv) + Q_MEH(:, nn, vv);
                 avg_delay_tot(:, nn, vv) = avg_delay_tot(:, nn, vv) + mean(tot_queues_ue(:, nn - min(nn, 1e3) + 1:nn, vv), 2) ./ A_avg * delta * 1e3;
             end  
             

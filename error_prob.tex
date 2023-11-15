@@ -1,0 +1,126 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{crimson2143940}{RGB}{214,39,40}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkorange25512714}{RGB}{255,127,14}
+\definecolor{forestgreen4416044}{RGB}{44,160,44}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{steelblue31119180}{RGB}{31,119,180}
+
+\begin{axis}[
+legend cell align={left},
+legend style={
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.03,0.97)},
+  anchor=north west,
+  draw=lightgray204
+},
+log basis x={10},
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xlabel={Probability of losing packet},
+xmin=0.000707945784384138, xmax=1.41253754462275,
+xmode=log,
+xtick style={color=black},
+xtick={1e-05,0.0001,0.001,0.01,0.1,1,10,100},
+xticklabels={
+  \(\displaystyle {10^{-5}}\),
+  \(\displaystyle {10^{-4}}\),
+  \(\displaystyle {10^{-3}}\),
+  \(\displaystyle {10^{-2}}\),
+  \(\displaystyle {10^{-1}}\),
+  \(\displaystyle {10^{0}}\),
+  \(\displaystyle {10^{1}}\),
+  \(\displaystyle {10^{2}}\)
+},
+y grid style={darkgray176},
+ylabel={Average Delay [ms]},
+ymin=16.2006268095744, ymax=22.8014409713787,
+ytick style={color=black}
+]
+\addplot [semithick, black]
+table {%
+0 16.5006638169292
+0.1 16.5006638169292
+0.2 16.5006638169292
+0.3 16.5006638169292
+0.4 16.5006638169292
+0.5 16.5006638169292
+0.6 16.5006638169292
+0.7 16.5006638169292
+0.8 16.5006638169292
+0.9 16.5006638169292
+1 16.5006638169292
+};
+\addlegendentry{Baseline}
+\addplot [semithick, steelblue31119180]
+table {%
+0.001 16.5141817583598
+0.01 16.5558826644619
+0.1 17.0389281036766
+0.2 17.6477882932673
+0.3 18.220853512456
+0.4 18.8391179549593
+0.5 19.4585386088495
+0.6 20.0312708595522
+0.7 20.6923868911274
+0.8 21.2828002959238
+0.9 21.8823940896467
+1 22.501403964024
+};
+\addlegendentry{INI-RIS}
+\addplot [semithick, darkorange25512714]
+table {%
+0.001 16.5102718576263
+0.01 16.5507469599351
+0.1 16.9809102295849
+0.2 17.5234095019851
+0.3 18.0344660505684
+0.4 18.5919640581594
+0.5 19.146708554346
+0.6 19.6570822905087
+0.7 20.2481547180818
+0.8 20.7755433994993
+0.9 21.3030323104393
+1 21.854150201553
+};
+\addlegendentry{SET-RIS}
+\addplot [semithick, forestgreen4416044]
+table {%
+0.001 16.5070091053371
+0.01 16.5067429148027
+0.1 16.5067432805996
+0.2 16.5067432805996
+0.3 16.5067432805996
+0.4 16.5067439217413
+0.5 16.5077600120228
+0.6 16.5082821324028
+0.7 16.5082821324028
+0.8 16.5082827538944
+0.9 16.5326666641313
+1 22.501403964024
+};
+\addlegendentry{INI-UE}
+\addplot [semithick, crimson2143940]
+table {%
+0.001 16.5081351099594
+0.01 16.5328512982824
+0.1 16.8088826929559
+0.2 17.1452749894293
+0.3 17.4660607786038
+0.4 17.8246314962361
+0.5 18.1825816907033
+0.6 18.528488538846
+0.7 18.8960004259363
+0.8 19.2456973289223
+0.9 19.5862958953674
+1 22.501403964024
+};
+\addlegendentry{SET-UE}
+\end{axis}
+
+\end{tikzpicture}

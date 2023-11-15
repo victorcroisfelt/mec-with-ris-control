@@ -91,7 +91,7 @@ function [avg_delay, rate_up_hist] = RIS_MEC_Control_UL_siso(D, angle, tau, T)
     tau_ce = (tau_s + T)  * (N_RIS / Ng + 1);
 
     mu = 5 * K * (6 * 1 * (1 + 5 * N_RIS^2) + 5 * (1+4 * N_RIS^2)) + N_RIS;
-    tau_ra = (4 + 1) * N_RIS / Ng * mu;
+    tau_ra = (2 + 1) * N_RIS / Ng * mu;
     tau_ra = tau_ra / 4.5e9;
 
     tau_overhead = tau_sig + tau_ce + tau_ra;

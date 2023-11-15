@@ -18,7 +18,7 @@ for pp = 1:length(proba_vec)
     proba = proba_vec(pp);
     
     tic
-    for aa = 1:length(angles_vec)
+    parfor aa = 1:length(angles_vec)
         angle = angles_vec(aa);
 
         [avg_delay(pp, aa, :), rate(pp, aa, :)] = RIS_MEC_Control_UL_siso(D, angle, proba);
@@ -32,4 +32,4 @@ end
 
 string = [data/D' num2str(D) '.mat'];
 
-save(string)
+save('ini-ue4.mat')
