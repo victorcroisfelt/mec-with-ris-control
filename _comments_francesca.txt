@@ -1,0 +1,19 @@
+Hi all,
+
+Here attached you can find 2 scripts, both of them for multi-users simulations, one for SISO and the other for SIMO communications.
+
+I am sending you also the first one because I have changed something in the channel generator, due to its particular geometric construction. Specifically, for multiple UEs, we also need to choose different positions of transmitters with respect to either the RIS and the AP.
+
+In both cases, I wrote this important comment in the code, together with another one for the number of RIS elements. For the SIMO script, in particular, it is important to choose the right number of blocks for phase-shift optimizations, in order to reduce time (meaning only the time to run the optimization!).
+
+In SIMO script there is also a warning in choosing the right file to load the codebook for beamforming, that is provided only for 3 linear arrays (8, 16 and 32 antennas). 
+
+For all these important warnings, I already provided the code: for multiple users, there are different distances, properly chosen; for different number of RIS elements, there are different possibilities which need to be perfect squares (be careful in choosing the blocks if you want to reduce time); for the multi-antenna, I wrote the name of different files .mat that you can load (and you can find of course here attached), you only have to change the number in variable Nr and in the middle of the file name!
+
+Finally, I tried to find the best value for Lyapunov parameter V1 for all these cases. When you run the codes for testing, it doesn't really matter if the value of the final average delay (namely variable avg_delay) is a little lower than the threshold, it only means that is not the very optimal choice, but the system is stable as long as this value do not exceed D_avg.
+
+For any doubt, question or whatever feel free to contact me! 
+
+Have a nice day,
+
+Francesca
