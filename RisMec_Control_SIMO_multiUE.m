@@ -2,6 +2,7 @@
 %% THIS SCRIPT IS VALID FOR SIMO AND MULTIPLE UEs
 clear all; clc; rand('state',0); randn('state',0)      
 
+
 % Optimization parameters and data
 N_slot = 3e3;                                  % Number of slots
 % it should be better to run for 3 or more for final resuts
