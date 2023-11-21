@@ -9,7 +9,7 @@ disp(['N_slot = ', num2str(N_slot)])
 disp(['K = ', num2str(K)])
 disp(['N_RIS = ', num2str(N_RIS)])
 disp(['N_AP = ', num2str(Nr)])
-disp(['num_realizations = ', num2str(num_realizations)])
+disp(['num_setups = ', num2str(num_setups)])
 disp('---------------------------')
 
 % Total slot duration
@@ -28,17 +28,17 @@ load('data/combining/w_candidates_32_antennas.mat', 'weights')
 possible_angles = size(weights, 2);
 
 %% Prepare to save simulation results
-total_energy = zeros(num_realizations);
-avg_delay = zeros(num_realizations);
+total_energy = zeros(num_setups);
+avg_delay = zeros(num_setups);
 
 %% Simulation
 disp('')
 disp('------- Simulation --------')
 
-% Go through all realizations
-for rr = 1:num_realizations
+% Go through all setups
+for rr = 1:num_setups
     
-    disp(['realization = ', num2str(rr)])
+    disp(['setup = ', num2str(rr)])
     tic;
 
     % Get current channels
@@ -55,10 +55,9 @@ for rr = 1:num_realizations
     total_energy(rr) = current_total_energy;
     avg_delay(rr) = current_avg_delay;
 
-    
     simulation_time = toc;
-    disp(['elapsed ', num2str(simulation_time), ' seconds)']);
-    
+    disp(['elapsed ', num2str(simulation_time), ' seconds.']);
+
 end
 
 
