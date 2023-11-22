@@ -1,6 +1,6 @@
 function [optimal_power_up, optimal_rate_up, freq_MEH, power_mec, current_v, power_RIS, opt_beam] = optimization_RIS(K, B_u,...
     Q_local, Q_MEH, Z, qtz_RIS, N_RIS, N_blocks, channel_RIS, channel_RIS_AP, channel_AP,...
-    N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha, possible_angles, weights_comb, Nr)
+    N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha, possible_angles, weights_comb, Nr, varargin)
 
     % Rate Optimization
     Q_tilde_up = B_u * (Q_local - Q_MEH + Z);
@@ -8,11 +8,18 @@ function [optimal_power_up, optimal_rate_up, freq_MEH, power_mec, current_v, pow
     m = [0:2^(qtz_RIS)-1]';
     possible_v = [0; exp(1i*(2*m*pi) / (2^(qtz_RIS)))];
 
+    % Load the FSPL of the direct link
     current_v = zeros(N_RIS, 1);
     [current_v, opt_beam] = Greedy_RIS(current_v, N_blocks, N_RIS, possible_v, K, channel_RIS, channel_RIS_AP,...
            channel_AP, N0, B_u, V, Q_tilde_up, p_bit, alpha, possible_angles, weights_comb, Nr);
-   
-    overall_channel_RIS_up = zeros(Nr, K); channel_over_noise_up = zeros(K, 1);
+    
+    
+    if ~isempty(varargin)                        
+        current_v = varargin{1};
+    end
+
+    overall_channel_RIS_up = zeros(Nr, K); 
+    channel_over_noise_up = zeros(K, 1);
     for kk = 1:K
         overall_channel_RIS_up(:, kk) = overall_channel_RIS_up(:, kk) + (channel_RIS_AP(:, :, kk) * diag(current_v) * channel_RIS(:, kk));
         channel_over_noise_up(kk, 1) = abs(weights_comb(:, opt_beam)' * (channel_AP(:, kk) + overall_channel_RIS_up(:, kk))) .^2 / (N0*B_u);
