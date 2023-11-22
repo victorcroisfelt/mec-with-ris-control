@@ -1,6 +1,12 @@
-function [total_energy, avg_delay] = rismec_control( ...
+function [total_energy, avg_delay] = rismec_control2( ...
     N_slot, K, Nr, N_RIS, total_delta, N_blocks, qtz_RIS, weights, possible_angles, ...
-    channel_ap_ris, channel_ap_ue, channel_ue_ris)
+    channel_ap_ris, channel_ap_ue, channel_ue_ris, proba)
+
+    %% Test Probability Vector
+    if sum(proba > 1)
+         error('proba: Probability vector has more than one entry different than 1.');
+    end
+
 
     %% Setup Parameters
     Msample = N_slot/2;                            % Slot to avoid for the final average
@@ -67,44 +73,57 @@ function [total_energy, avg_delay] = rismec_control( ...
     %% Optimization Algorithm
     for iter = 1:num_iter
 
-         Q_local = zeros(K, N_slot, length(V1)); Q_MEH = Q_local;
-         Z = zeros(K, N_slot, length(V1)); Y = Z; arrivals = Z;
-         rand('state',iter); randn('state',iter)
+         % Prepare so save results in this iteration
+         ue_comm_queue = zeros(K, N_slot, length(V1));      % local communication queue    
+         es_remo_queue = zeros(K, N_slot, length(V1));      % remote computation queue
+         es_comm_queue = zeros(K, N_slot, length(V1));      % virtual communication queue     
          
          % Loop over trade-off parameter V 
          for vv = 1:length(V1)
             V = V1(vv);       
             
-            % Loop over the Slots
+            % Loop over the slots
             for nn = 1:N_slot
                 
-                % shallow slot counting
+                % Shallow slot counting
                 if mod(nn, 200) == 0
                     nn
                 end
-                A = A1(:, nn);            
+
+                % Toss a coin to evaluate possible errors for each UE
+                toss = rand(K, 1);
+
+                %% Phase 1: Signaling -- Initialization
+
+                % Get current arrival arate
+                A = A1(:, nn);     
+
+
+                
+
+
                 
                 % Optimization function
                 [power_up, rate_up, freq_MEH, power_mec, current_v, power_RIS, opt_beam] = ...
                 optimization_RIS(K, B_u,...
-                    Q_local(:, nn, vv), Q_MEH(:, nn, vv), Z(:, nn, vv), qtz_RIS, N_RIS, N_blocks,...
+                    ue_comm_queue(:, nn, vv), es_remo_queue(:, nn, vv), es_comm_queue(:, nn, vv), qtz_RIS, N_RIS, N_blocks,...
                     channel_ue_ris(:, :, nn), channel_ap_ris(:, :, :, nn), channel_ap_ue(:, :, nn),...
                     N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha, possible_angles, weights, Nr);
                 
                 % Update physical queues          
-                Q_local(:, nn+1, vv) = max(0, Q_local(:,nn,vv) - delta * rate_up) + A;
-                Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn, vv), delta * rate_up);
+                ue_comm_queue(:, nn+1, vv) = max(0, ue_comm_queue(:,nn,vv) - delta * rate_up) + A;
+                es_remo_queue(:,nn+1,vv) = max(0, es_remo_queue(:,nn,vv) - freq_MEH * delta .* J) + min(ue_comm_queue(:, nn, vv), delta * rate_up);
                 
                 % Update virtual queues
-                Z(:, nn+1, vv) = max(0, Z(:, nn, vv) + Q_local(:, nn+1, vv) + Q_MEH(:, nn+1, vv) - Q_avg);
-                Z_tot(:, nn, vv) = Z_tot(:, nn, vv) + Z(:, nn, vv); 
+                es_comm_queue(:, nn+1, vv) = max(0, es_comm_queue(:, nn, vv) + ue_comm_queue(:, nn+1, vv) + es_remo_queue(:, nn+1, vv) - Q_avg);
+                Z_tot(:, nn, vv) = Z_tot(:, nn, vv) + es_comm_queue(:, nn, vv); 
                 
                 % Energy donsumption and delay updates 
                 energy_tot(:, nn, vv) = power_up * delta + Pt .* delta_signaling;
                 energy_tot_AP(nn, vv) = delta * (p_AP_on * max(power_up>0)) + delta_signaling * (p_AP_on + p_AP_tx);
                 energy_tot_mec(nn, vv) = delta * power_mec + delta_signaling * kappa * min_poss_fm^3;
                 energy_tot_RIS(nn, vv) = delta * power_RIS + delta_signaling * p_bit * N_RIS;        
-                tot_queues_ue(:, nn, vv) = Q_local(:, nn, vv) + Q_MEH(:, nn, vv);
+                tot_queues_ue(:, nn, vv) = ue_comm_queue(:, nn, vv) + es_remo_queue(:, nn, vv);
                 avg_delay_tot(:, nn, vv) = avg_delay_tot(:, nn, vv) + mean(tot_queues_ue(:, nn - min(nn, 1e3) + 1:nn, vv), 2) ./ A_avg * delta * 1e3;
             end  
             
