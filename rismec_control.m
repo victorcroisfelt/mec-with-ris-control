@@ -66,20 +66,10 @@ function [total_energy, avg_delay] = rismec_control( ...
 
     %% Optimization Algorithm
     for iter = 1:num_iter
-<<<<<<< HEAD
-
+        
          Q_local = zeros(K, N_slot, length(V1)); Q_MEH = Q_local;
          Z = zeros(K, N_slot, length(V1)); Y = Z; arrivals = Z;
          rand('state',iter); randn('state',iter)
-=======
-        
-         Q_local = zeros(K, N_slot, length(V1)); 
-         Q_MEH = Q_local;
-         Z = zeros(K, N_slot, length(V1)); 
-         Y = Z; 
-         arrivals = Z;
-         rng(iter);         
->>>>>>> 23a4c92e8e613df5ecfad57a1fee67924a427941
          
          % Loop over trade-off parameter V 
          for vv = 1:length(V1)
@@ -122,7 +112,7 @@ function [total_energy, avg_delay] = rismec_control( ...
             total_energy_AP(vv, iter) = mean(energy_tot_AP(Msample:N_slot, vv));
             total_energy_mec(vv, iter) = mean(energy_tot_mec(Msample:N_slot, vv));
             total_energy_RIS(vv, iter) = mean(energy_tot_RIS(Msample:N_slot, vv));
-            
+
             avg_delay(vv, iter) = max(mean(tot_queues_ue(:, Msample:N_slot, vv), 2) ./ A_avg * total_delta * 1e3);
             
          end
