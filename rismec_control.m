@@ -1,12 +1,12 @@
 function [total_energy, avg_delay] = rismec_control( ...
-    N_slot, K, Nr, N_RIS, total_delta, N_blocks, qtz_RIS, weights, possible_angles, ...
+    N_slot, K, M, N, total_tau, N_blocks, qtz_RIS, weights, possible_angles, ...
     channel_ap_ris, channel_ap_ue, channel_ue_ris)
 
     %% Setup Parameters
     Msample = N_slot/2;                            % Slot to avoid for the final average
     perc = .9;                                     % Percentage of slot duration dedicated to offloading
-    delta = total_delta .* perc;                   % Slot duration dedicated to offloading
-    delta_signaling = (1 - perc) * total_delta;    % Slot duration dedicated to control signaling
+    tau_pay = total_tau .* perc;                   % Slot duration dedicated to offloading
+    tau_oh = (1 - perc) * total_tau;               % Slot duration dedicated to control signaling
     alpha = 0.5;                                   % Weight of user and network energy consumption (e.g. 0.5 --> holistic strategy)
     num_iter = 1;                                  % Number of iterations for possible sample average
     
@@ -42,7 +42,7 @@ function [total_energy, avg_delay] = rismec_control( ...
         A1(kk,:) = poissrnd(A_avg(kk), 1, N_slot);
     end
     D_avg = 30e-3 * ones(K, 1);                % Delay constraint
-    Q_avg = D_avg .* A_avg / total_delta;      % Average queue length corresponding to desired average delay
+    Q_avg = D_avg .* A_avg / total_tau;      % Average queue length corresponding to desired average delay
     
     %%% the vector V1 can be represented also by one value, usually the last one = the one for which the trade-off is optimal 
     %%% the vector is necessary only for the Energy/Delay trade-off
@@ -67,9 +67,12 @@ function [total_energy, avg_delay] = rismec_control( ...
     %% Optimization Algorithm
     for iter = 1:num_iter
         
-         Q_local = zeros(K, N_slot, length(V1)); Q_MEH = Q_local;
-         Z = zeros(K, N_slot, length(V1)); Y = Z; arrivals = Z;
-         rand('state',iter); randn('state',iter)
+         Q_local = zeros(K, N_slot, length(V1)); 
+         Q_MEH = Q_local;
+         Z = zeros(K, N_slot, length(V1)); 
+         Y = Z; 
+         arrivals = Z;
+         rng(iter);         
          
          % Loop over trade-off parameter V 
          for vv = 1:length(V1)
@@ -79,40 +82,40 @@ function [total_energy, avg_delay] = rismec_control( ...
             for nn = 1:N_slot
                 
                 % shallow slot counting
-                if mod(nn, 200) == 0
-                    nn
+                if mod(nn, 20) == 0
+                    fprintf('\titeration num %03d/%03d\n', nn, N_slot)
                 end
                 A = A1(:, nn);            
                 
                 % Optimization function
                 [power_up, rate_up, freq_MEH, power_mec, current_v, power_RIS, opt_beam] = ...
                 optimization_RIS(K, B_u,...
-                    Q_local(:, nn, vv), Q_MEH(:, nn, vv), Z(:, nn, vv), qtz_RIS, N_RIS, N_blocks,...
+                    Q_local(:, nn, vv), Q_MEH(:, nn, vv), Z(:, nn, vv), qtz_RIS, N, N_blocks,...
                     channel_ue_ris(:, :, nn), channel_ap_ris(:, :, :, nn), channel_ap_ue(:, :, nn),...
-                    N0, V, Pt, possible_f, J, delta, p_bit, kappa, alpha, possible_angles, weights, Nr);
+                    N0, V, Pt, possible_f, J, tau_pay, p_bit, kappa, alpha, possible_angles, weights, M);
                 
                 % Update physical queues          
-                Q_local(:, nn+1, vv) = max(0, Q_local(:,nn,vv) - delta * rate_up) + A;
-                Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn,vv) - freq_MEH * delta .* J) + min(Q_local(:, nn, vv), delta * rate_up);
+                Q_local(:, nn+1, vv) = max(0, Q_local(:,nn,vv) - tau_pay * rate_up) + A;
+                Q_MEH(:,nn+1,vv) = max(0, Q_MEH(:,nn,vv) - freq_MEH * tau_pay .* J) + min(Q_local(:, nn, vv), tau_pay * rate_up);
                 
                 % Update virtual queues
                 Z(:, nn+1, vv) = max(0, Z(:, nn, vv) + Q_local(:, nn+1, vv) + Q_MEH(:, nn+1, vv) - Q_avg);
                 Z_tot(:, nn, vv) = Z_tot(:, nn, vv) + Z(:, nn, vv); 
                 
                 % Energy donsumption and delay updates 
-                energy_tot(:, nn, vv) = power_up * delta + Pt .* delta_signaling;
-                energy_tot_AP(nn, vv) = delta * (p_AP_on * max(power_up>0)) + delta_signaling * (p_AP_on + p_AP_tx);
-                energy_tot_mec(nn, vv) = delta * power_mec + delta_signaling * kappa * min_poss_fm^3;
-                energy_tot_RIS(nn, vv) = delta * power_RIS + delta_signaling * p_bit * N_RIS;        
+                energy_tot(:, nn, vv) = power_up * tau_pay + Pt .* tau_oh;
+                energy_tot_AP(nn, vv) = tau_pay * (p_AP_on * max(power_up>0)) + tau_oh * (p_AP_on + p_AP_tx);
+                energy_tot_mec(nn, vv) = tau_pay * power_mec + tau_oh * kappa * min_poss_fm^3;
+                energy_tot_RIS(nn, vv) = tau_pay * power_RIS + tau_oh * p_bit * N;        
                 tot_queues_ue(:, nn, vv) = Q_local(:, nn, vv) + Q_MEH(:, nn, vv);
-                avg_delay_tot(:, nn, vv) = avg_delay_tot(:, nn, vv) + mean(tot_queues_ue(:, nn - min(nn, 1e3) + 1:nn, vv), 2) ./ A_avg * delta * 1e3;
+                avg_delay_tot(:, nn, vv) = avg_delay_tot(:, nn, vv) + mean(tot_queues_ue(:, nn - min(nn, 1e3) + 1:nn, vv), 2) ./ A_avg * tau_pay * 1e3;
             end  
             
             total_energy(vv, iter) = mean(sum(energy_tot(:, Msample:N_slot, vv), 1), 2);
             total_energy_AP(vv, iter) = mean(energy_tot_AP(Msample:N_slot, vv));
             total_energy_mec(vv, iter) = mean(energy_tot_mec(Msample:N_slot, vv));
             total_energy_RIS(vv, iter) = mean(energy_tot_RIS(Msample:N_slot, vv));
-            avg_delay(vv, iter) = max(mean(tot_queues_ue(:, Msample:N_slot, vv), 2) ./ A_avg * total_delta * 1e3);
+            avg_delay(vv, iter) = max(mean(tot_queues_ue(:, Msample:N_slot, vv), 2) ./ A_avg * total_tau * 1e3);
          end
     end
 end
