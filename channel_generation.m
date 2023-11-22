@@ -1,10 +1,10 @@
-clear all; clc; rand('state',0); randn('state',0) 
+clear all; clc; rng(0);
 
 %% Parameters 
-N_slot = 3e3;   % Number of slots                                  
-N_RIS = 64;     % Number of RIS elements !!! NEEDS TO BE A PERFECT SQUARE FOR CHANNELS GENERATION
-Nt = 1;         % Number of TX antennas (user) 
-Nr = 32;        % Number of RX antennas, possibilities: 8, 16, 32 (AP)
+N_slot = 1e2;   % Number of slots                                  
+N = 64;     % Number of RIS elements !!! NEEDS TO BE A PERFECT SQUARE FOR CHANNELS GENERATION
+ant_ue = 1;     % Number of TX antennas (user) 
+M = 8;          % Number of RX antennas, possibilities: 8, 16, 32 (AP)
 alpha_dir = 3;  % FSPL exponent of the direct link
 f = 2e9;        % Frequency
 
@@ -14,14 +14,14 @@ dist_ap_ris = 100;      % Distance AP to RIS in meters
 angl_ap_ris = 45;       % Angle AP to RIS in degrees
 dist_minimum = 10;      % Minimum distance between RIS and UE
 dist_maximum = 100;     % Maximum distance between RIS and UE
-num_setups = 10;  % Number of setups
+num_setups = 10;        % Number of setups
 
 %% Simulation
 
 % Prepare to save simulation results
-overall_channel_ue_ris = zeros(num_setups, N_RIS, K, N_slot); 
-overall_channel_ap_ris = zeros(num_setups, Nr, N_RIS, K, N_slot); 
-overall_channel_ap_ue = zeros(num_setups, Nr, K, N_slot);
+overall_channel_ue_ris = zeros(num_setups, N, K, N_slot); 
+overall_channel_ap_ris = zeros(num_setups, M, N, K, N_slot); 
+overall_channel_ap_ue = zeros(num_setups, M, K, N_slot);
 
 % Go through all setups
 for rr = 1:num_setups
@@ -34,7 +34,7 @@ for rr = 1:num_setups
     
         % Generate channels
         [Hdirt, H1t, H2t] = channel_mat_RIS( ...
-            Nt, Nr, N_RIS, ...
+            ant_ue, M, N, ...
             dist_ap_ris, angl_ap_ris, ...
             dist_minimum, dist_maximum, ...
             f, N_slot, alpha_dir ...
@@ -42,7 +42,7 @@ for rr = 1:num_setups
         
         % Get channels
         overall_channel_ue_ris(rr, :, qq, :) = cell2mat(H1t);
-        overall_channel_ap_ris(rr, :, :, qq, :) = reshape(cell2mat(H2t), [Nr, N_RIS, N_slot]);
+        overall_channel_ap_ris(rr, :, :, qq, :) = reshape(cell2mat(H2t), [M, N, N_slot]);
         overall_channel_ap_ue(rr, :, qq, :) = cell2mat(Hdirt);
     end
 
@@ -52,6 +52,6 @@ for rr = 1:num_setups
 end
 
 % Save generated channels
-file_name = ['data/channel/K', num2str(K), '.mat'];
+file_name = ['data/channel/N' num2str(N), '_M', num2str(M), '_K', num2str(K), '.mat'];
 save(file_name)
 
