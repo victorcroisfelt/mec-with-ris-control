@@ -1,10 +1,10 @@
 clear all; clc; rand('state',0); randn('state',0) 
 
 %% Parameters 
-N_slot = 3e3;   % Number of slots                                  
+N_slot = 1e2;   % Number of slots                                  
 N_RIS = 64;     % Number of RIS elements !!! NEEDS TO BE A PERFECT SQUARE FOR CHANNELS GENERATION
 Nt = 1;         % Number of TX antennas (user) 
-Nr = 32;        % Number of RX antennas, possibilities: 8, 16, 32 (AP)
+Nr = 8;        % Number of RX antennas, possibilities: 8, 16, 32 (AP)
 alpha_dir = 3;  % FSPL exponent of the direct link
 f = 2e9;        % Frequency
 
@@ -14,7 +14,7 @@ dist_ap_ris = 100;      % Distance AP to RIS in meters
 angl_ap_ris = 45;       % Angle AP to RIS in degrees
 dist_minimum = 10;      % Minimum distance between RIS and UE
 dist_maximum = 100;     % Maximum distance between RIS and UE
-num_setups = 10;  % Number of setups
+num_setups = 10;        % Number of setups
 
 %% Simulation
 
