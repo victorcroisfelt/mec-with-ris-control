@@ -1,4 +1,4 @@
-clear all; clc; rng('default');
+clear all; clc; rng('default'); rng(0);
 
 %% Load Channel and Simulation Parameters 
 file_name = 'data/channel/N64_M8_K2.mat';
@@ -8,7 +8,7 @@ disp('----- Main Parameters -----')
 disp(['N_slot = ', num2str(N_slot)])
 disp(['K = ', num2str(K)])
 disp(['N = ', num2str(N)])
-disp(['M = ', num2str(N)])
+disp(['M = ', num2str(M)])
 disp(['num_setups = ', num2str(num_setups)])
 disp('---------------------------')
 
@@ -17,66 +17,81 @@ disp('---------------------------')
 N_blocks = N/2;     
 % be very careful in choosing the right divider respect to N_RIS
 
-% Number of bits used to quantize the phase of the RIS
-qtz_RIS = 1; 
-
 % Load receive combining (CHECK THE CORRESPONDING N_AP)
 load(['data/combining/w_candidates_' num2str(M) '_antennas.mat'], 'weights')
 possible_angles = size(weights, 2);
 
+% Number of bits used to quantize the phase of the RIS
+qtz_RIS = 1; 
 
-%% Computing Time
+% Max frequency available at the ES
+f_max = 4.5e9;      % [Hz]
 
-% Define total slot duration
-tau = 400e-3;
+f_ra = 0.5e9;
 
-% Define TTI time
-constant = 4;
-tti_time = constant * 1/14 * 10e-3;
+% Number of pilots per TTI
+N_p = 1;
 
 % Define the RIS switching time
 tau_ris = 0; % 1/14 * 10e-3
 
-% Compute signaling time
-tau_sig = 2 * tau_ris + 5 * tti_time; 
+% Define kind of RIS-CC
+% ris_cc = 'ib-cc';
+ris_cc = 'ob-cc';
 
-% Compute channel estimation overhead
-tau_ce = (tau_ris + tti_time) * (N_blocks + 1);
+%% Computing Time
+% Define total slot duration
+tau = 100e-3;
 
-% Compute mu constant
-mu = 5 * K * (6 * 1 * (1 + 5 * N^2) + 5 * (1 + 4 * N^2)) + N;
+% Define TTI time
+constant = 1;
+tti_time = constant * 1/14 * 10e-3;
 
-% Compute RA time 
-tau_ra = (4 + 1) * N_blocks * mu;
-tau_ra = tau_ra / 4.5e9;
+conf_codebook_size = N_blocks + 1;
 
-% Compute overhead time
-tau_overhead = tau_sig + tau_ce + tau_ra;
-
-% Percentage of slot duration dedicated to offloading
-perc = 1 - (tau_overhead / tau);
+[tau_overhead, perc, tau_sig, tau_ce, tau_ra] = compute_overhead(tti_time, tau_ris, tau, N_p, N_blocks, conf_codebook_size, qtz_RIS, M, f_ra, K, ris_cc);
 
 %% Simulation Parameters
-
 % Define error type
 % 1: INI-U
 % 2: INI-R
 % 3: SET-U
 % 4: SET-R
-error_type = 'ini-u';
+
 %error_type = 'ini-r';
 %error_type = 'set-u';
 %error_type = 'set-r';
 
 % Probability vector to lose of the packets:
-probas = [1e-3, 1e-2, 1e-1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99];
+prob_vector = [0, 1e-3, 1e-2, 1e-1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99];
 
 % Get length of the probability vector
-num_points = length(probas);
+num_points = length(prob_vector);
+
+%% Loop through error type
+
+for error = 0:4
+    switch error
+        case 0
+            error_type = 'ini-u';
+            error_prob_matrix = [prob_vector.', zeros(num_points, 1), zeros(num_points, 1), zeros(num_points, 1)];
+        case 1
+            error_type = 'ini-r';
+            error_prob_matrix = [zeros(num_points, 1), prob_vector.', zeros(num_points, 1),zeros(num_points, 1)];
+        case 2
+            error_type = 'set-u';
+            error_prob_matrix = [zeros(num_points, 1), zeros(num_points, 1), prob_vector.', zeros(num_points, 1)];
+        case 3
+            error_type = 'set-r';
+            error_prob_matrix =  [zeros(num_points, 1), zeros(num_points, 1), zeros(num_points, 1), prob_vector.'];     
+   end
+
+        
+    disp(['----------', error_type, '------------'])
 
 %% Prepare to save simulation results
-total_energy = zeros(num_setups, num_points);
-avg_delay = zeros(num_setups, num_points);
+total_energy = zeros(num_setups, num_points, N_slot);
+avg_delay = zeros(num_setups, num_points, K, N_slot);
 
 %% Simulation
 disp('------- Simulation --------')
@@ -84,30 +99,27 @@ disp('------- Simulation --------')
 % Go through all setups
 for rr = 1:num_setups
 
-    disp(['setup = ', num2str(rr), ])
+    fprintf('setup = %02d/%02d\n', rr, num_setups)
     tic;
 
     % Get current channels
-    current_channel_ap_ris = squeeze(overall_channel_ap_ris(rr, :, :, :, :));
-    current_channel_ap_ue = squeeze(overall_channel_ap_ue(rr, :, :, :));
+    current_channel_ris_ap = squeeze(overall_channel_ris_ap(rr, :, :, :, :));
+    current_channel_ue_ap = squeeze(overall_channel_ue_ap(rr, :, :, :));
     current_channel_ue_ris = squeeze(overall_channel_ue_ris(rr, :, :, :));
 
     % Go through all probability points
-    for nn = 1:num_points
-       
-        disp(['    point = ', num2str(nn), ])
+    parfor nn = 1:num_points       
+        fprintf('\tpoint = %02d/%02d\n', nn, num_points)
 
-        % Current probability
-        proba = probas(nn);
-
+        
+        
         % Optmize control
-        [current_total_energy, current_avg_delay] = ...
-        rismec_control(N_slot, K, M, N, tau, perc, N_blocks, qtz_RIS, weights, possible_angles, ...
-            current_channel_ap_ris, current_channel_ap_ue, current_channel_ue_ris, proba, error_type);
-
-        % Save current data
-        total_energy(rr, nn) = current_total_energy;
-        avg_delay(rr, nn) = current_avg_delay;
+        [total_energy(rr, nn, :), avg_delay(rr, nn, :, :)] = ...
+        rismec_control(N_slot, K, N, ...
+            f_max, tau, perc, ...
+            N_blocks, qtz_RIS, weights, possible_angles, ...
+            current_channel_ris_ap, current_channel_ue_ap, current_channel_ue_ris, ...
+            error_prob_matrix(nn, :), tti_time, conf_codebook_size, N_p, f_ra, tau_ra);
 
     end
 
@@ -120,3 +132,4 @@ end
 file_name = ['data/results/', error_type, '/N', num2str(N), '_M', num2str(M), '_K', num2str(K), '.mat'];
 save(file_name)
 
+end
