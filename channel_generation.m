@@ -14,7 +14,7 @@ dist_ap_ris = 100;      % Distance AP to RIS in meters
 angl_ap_ris = 45;       % Angle AP to RIS in degrees
 dist_minimum = 10;      % Minimum distance between RIS and UE
 dist_maximum = 100;     % Maximum distance between RIS and UE
-num_setups = 1;        % Number of setups
+num_setups = 100;        % Number of setups
 
 %% Simulation
 
