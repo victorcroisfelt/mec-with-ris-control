@@ -13,9 +13,9 @@ function [tau_overhead, perc, tau_sig, tau_ce, tau_ra] = compute_overhead(tti_ti
 
 % Compute signaling time
 if strcmp(ris_cc, 'ib-cc')
-    tau_sig = 2 * tau_ris + 5 * tti_time; 
+    tau_sig = 3 * tau_ris + 5 * tti_time; 
 else
-    tau_sig = 2 * tau_ris + 3 * tti_time; 
+    tau_sig = 3 * tau_ris + 3 * tti_time; 
 end
 
 % Compute channel estimation overhead
