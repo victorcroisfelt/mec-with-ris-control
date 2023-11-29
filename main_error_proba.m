@@ -36,8 +36,8 @@ N_p = 1;
 tau_ris = 0; % 1/14 * 10e-3
 
 % Define kind of RIS-CC
-% ris_cc = 'ib-cc';
-ris_cc = 'ob-cc';
+ris_cc = 'ib-cc';
+% ris_cc = 'ob-cc';
 
 %% Computing Time
 % Define total slot duration
@@ -58,19 +58,19 @@ conf_codebook_size = N_blocks + 1;
 % 3: SET-U
 % 4: SET-R
 
-%error_type = 'ini-r';
-%error_type = 'set-u';
-%error_type = 'set-r';
-
 % Probability vector to lose of the packets:
 prob_vector = [0, 1e-3, 1e-2, 1e-1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99];
 
 % Get length of the probability vector
 num_points = length(prob_vector);
 
+%% Arrival rate
+A_avg_vector = 2 .^ [8:12];
+num_arrival = length(A_avg_vector);
+
 %% Loop through error type
 
-for error = 0:4
+for error = 0:3
     switch error
         case 0
             error_type = 'ini-u';
@@ -90,11 +90,13 @@ for error = 0:4
     disp(['----------', error_type, '------------'])
 
 %% Prepare to save simulation results
-total_energy = zeros(num_setups, num_points, N_slot);
-avg_delay = zeros(num_setups, num_points, K, N_slot);
+total_energy = zeros(num_arrival, num_setups, num_points, N_slot);
+avg_delay = zeros(num_arrival, num_setups, num_points, K, N_slot);
 
 %% Simulation
 disp('------- Simulation --------')
+
+
 
 % Go through all setups
 for rr = 1:num_setups
@@ -107,25 +109,27 @@ for rr = 1:num_setups
     current_channel_ue_ap = squeeze(overall_channel_ue_ap(rr, :, :, :));
     current_channel_ue_ris = squeeze(overall_channel_ue_ris(rr, :, :, :));
 
-    % Go through all probability points
-    parfor nn = 1:num_points       
-        fprintf('\tpoint = %02d/%02d\n', nn, num_points)
-
-        
-        
-        % Optmize control
-        [total_energy(rr, nn, :), avg_delay(rr, nn, :, :)] = ...
-        rismec_control(N_slot, K, N, ...
-            f_max, tau, perc, ...
-            N_blocks, qtz_RIS, weights, possible_angles, ...
-            current_channel_ris_ap, current_channel_ue_ap, current_channel_ue_ris, ...
-            error_prob_matrix(nn, :), tti_time, conf_codebook_size, N_p, f_ra, tau_ra);
-
+    % Go through arrival rate
+    for aa = 1:num_arrival       
+        A_avg = A_avg_vector(aa);
+        fprintf('\tarrival %02d/%02d\n', aa, num_arrival)
+    
+        % Go through all probability points
+        parfor nn = 1:num_points       
+            fprintf('\t\tpoint = %02d/%02d\n', nn, num_points)
+    
+            % Optmize control
+            [total_energy(aa, rr, nn, :), avg_delay(aa, rr, nn, :, :)] = ...
+            rismec_control(N_slot, K, N, ...
+                f_max, tau, perc, ...
+                N_blocks, qtz_RIS, weights, possible_angles, ...
+                current_channel_ris_ap, current_channel_ue_ap, current_channel_ue_ris, ...
+                error_prob_matrix(nn, :), tti_time, conf_codebook_size, N_p, f_ra, tau_ra, A_avg);
+    
+        end    
     end
-
     simulation_time = toc;
     disp(['elapsed ', num2str(simulation_time), ' seconds.']);
-
 end
 
 % Save results
