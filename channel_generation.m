@@ -2,9 +2,9 @@ clear all; clc; rng(0);
 
 %% Parameters 
 N_slot = 1e2;   % Number of slots                                  
-N = 64;         % Number of RIS elements !!! NEEDS TO BE A PERFECT SQUARE FOR CHANNELS GENERATION
+N = 100;         % Number of RIS elements !!! NEEDS TO BE A PERFECT SQUARE FOR CHANNELS GENERATION
 ant_ue = 1;     % Number of TX antennas (user) 
-M = 8;          % Number of RX antennas, possibilities: 8, 16, 32 (AP)
+M = 16;          % Number of RX antennas, possibilities: 8, 16, 32 (AP)
 alpha_dir = 3;  % FSPL exponent of the direct link
 f = 2e9;        % Frequency
 
