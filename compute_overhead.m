@@ -19,7 +19,7 @@ else
 end
 
 % Compute channel estimation overhead
-tau_ce = (tau_ris + tti_time * N_pilots) * conf_codebook_size;
+tau_ce = (tau_ris + tti_time * N_pilots) * (conf_codebook_size + 1);
 
 % Compute mu constant
 mu = 2 * (K * (3*N_blocks + M + 4) + 3);
@@ -31,7 +31,7 @@ tau_ra =  n_ra / f_ra;
 % Compute overhead time
 tau_overhead = tau_sig + tau_ce + tau_ra;
 
-if any(tau) <= tau_overhead
+if any(tau <= tau_overhead)
     error('at least one tau value lower than tau_overhead')
 end
 
