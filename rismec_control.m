@@ -1,14 +1,14 @@
-function [energy_tot, avg_delay_tot, V] = rismec_control( ...
+function [energy_tot, avg_delay_tot] = rismec_control( ...
     N_slot, K, N, f_max, tau, perc, N_blocks, qtz_RIS, weights, possible_angles, ...
     channel_ap_ris, channel_ap_ue, channel_ue_ris, error_prob, ...
-    tti_time, conf_codebook_size, N_pilot, f_ra, tau_ra, A_avg)
+    tti_time, conf_codebook_size, N_pilot, f_ra, tau_ra, avg_arrival_rate, V1)
 
     %% Test Probability Vector
     if (length(error_prob) ~= 4)
         error('probas: probability vector has not 4 entries. You should have an entry for each error type, given in the order: INI-U, INI-R, SET-U, SET-R');
     end
     if any(error_prob > 1)
-         error('probas: probability vector has more than one entry different than 1.');
+         error('probas: probability vector has at least one entry > 1.');
     end
    
     %% Setup Parameters    
@@ -40,77 +40,62 @@ function [energy_tot, avg_delay_tot, V] = rismec_control( ...
     x = 3 * ones(K, 1);                   % Conversion factor for the computation queue
     J = 10.^(-x);                         % Bits/CPU cycle
     
-    %% Optimization Parameters and Requirements
-    % A_avg = 512;                  % Average arrival rate    
-    A = poissrnd(A_avg, K, N_slot);
+    %% Requirements    
+    % find arrival of bits
+    A_avg = ceil(avg_arrival_rate * tau);   % Average number of bits to offload
+    A = poissrnd(A_avg, K, N_slot);         % Number of bit to offload per slot
     
-    D = tau * 2.5;
-
-    D_avg = D * ones(K, 1);                % Delay constraint
+    D = 300e-3;                        % Delay constraint [s]
+    D_avg = D * ones(K, 1);            % Delay constraint per UE
     Q_avg = D_avg .* A_avg / tau;      % Average queue length corresponding to desired average delay
+  
     
-    %%% the vector V1 can be represented also by one value, usually the last one = the one for which the trade-off is optimal 
-    %%% the vector is necessary only for the Energy/Delay trade-off
-    % V1 = [3e8; 1e9; 2e9; 3e10; 4e11];                % Lyapunov trade-off parameter
-    V1 = 3e10;
-    avg_sample = floor(N_slot/2);
-    
-    %% Simulation Results
-
+    %% Simulation variables
     % Energy
     energy_tot_ues = zeros(K, N_slot, length(V1)); 
     energy_tot_es = zeros(N_slot, length(V1));
     energy_tot_ap = energy_tot_es;
     energy_tot_ris = energy_tot_es; 
     energy_tot = zeros(N_slot, length(V1));
-   
-   
-    es_virtual_queue_total = zeros(K, N_slot, length(V1));
-    avg_delay_tot = zeros(K, N_slot, length(V1));
-    tot_queues_ue = zeros(K, N_slot, length(V1)); 
-    
 
-    %% Optimization Algorithm
-    % Prepare to save results in this iteration
+    % Queues and delay
+    avg_delay_tot = zeros(K, N_slot, length(V1));
+    es_virtual_queue_total = zeros(K, N_slot, length(V1));  % useless ??
+    tot_queues_ue = zeros(K, N_slot, length(V1));         % Total real queue    
     ue_comm_queue = zeros(K, N_slot, length(V1));         % UE's local communication queue    
     es_comp_queue = zeros(K, N_slot, length(V1));         % ES' computation queue
-    es_comm_queue = zeros(K, N_slot, length(V1));         % UE's communication queue known by the ES         
+    es_comm_queue = zeros(K, N_slot, length(V1));         % UE's communication queue known by the ES (estimated)       
     es_virtual_queue = zeros(K, N_slot, length(V1));      % ES' virtual communication queue (estimated)     
 
     % Prepare to save previous values
     prev_ue_rate = zeros(K, 1);            % previous UE's rate
     prev_ue_power = zeros(K, 1);           % previous UE's power     
-    prev_ris_config = zeros(N, 1);     % previous RIS' configuratio
-    prev_freq_MEH = zeros(K, 1);           % previous UE's power     
+    prev_ris_config = zeros(N, 1);         % previous RIS' configuration
+    prev_freq_MEH = zeros(K, 1);           % previous ES freq
 
+    
+    %% Error probability
+    % Toss several coins to evaluate the packets that were losts
+    tosses_ini_u = rand(N_slot, K);
+    tosses_ini_r = rand(N_slot, 1);
+    tosses_set_u = rand(N_slot, K);
+    tosses_set_r = rand(N_slot, 1);
+
+    % Compute packet lost
+    pkts_lost_ini_u = tosses_ini_u < error_prob(1);
+    pkts_lost_ini_r = tosses_ini_r < error_prob(2);
+    pkts_lost_set_u = tosses_set_u < error_prob(3);
+    pkts_lost_set_r = tosses_set_r < error_prob(4);     
+
+    %% Optimization Algorithm
     % Loop over trade-off parameter V 
     for vv = 1:length(V1)
         
         % Get current trade-off parameter
-        V = V1(vv);       
-
-        % Toss several coins to evaluate the packets that were losts
-        tosses_ini_u = rand(N_slot, K);
-        tosses_ini_r = rand(N_slot, 1);
-        tosses_set_u = rand(N_slot, K);
-        tosses_set_r = rand(N_slot, 1);
-
-        % Compute packet lost
-        pkts_lost_ini_u = tosses_ini_u < error_prob(1);
-        pkts_lost_ini_r = tosses_ini_r < error_prob(2);
-        pkts_lost_set_u = tosses_set_u < error_prob(3);
-        pkts_lost_set_r = tosses_set_r < error_prob(4);    
-
-        % Pre-allocation of data in the comm queue during first slot            
-        
+        V = V1(vv);              
         
         % Loop over the slots
-        for nn = 1:N_slot
-            
-            % Shallow slot counting
-%             if mod(nn, 50) == 0
-%                 fprintf('\t\t\titeration %03d/%03d\n', nn, N_slot);
-%             end
+        for nn = 1:N_slot            
 
             % Get current, true channels
             true_channel_ue_ris = channel_ue_ris(:, :, nn);
@@ -140,6 +125,7 @@ function [energy_tot, avg_delay_tot, V] = rismec_control( ...
             else
                 % Update UE local comm queue
                 ue_comm_queue(:, nn, vv) = max(0, ue_comm_queue(:, nn-1, vv) - tau_pay * prev_ue_rate) + A(:, nn);
+                
                 % Update the ES estimated comm queue 
                 %%% Check if INI-U was lost
                 % if the INI-U is correctly received                    
@@ -227,12 +213,6 @@ function [energy_tot, avg_delay_tot, V] = rismec_control( ...
         % Save delay
         avg_delay_tot(:, :, vv) = tot_queues_ue(:, :, vv) ./ A_avg * tau *1e3;
     end
-
-    % Find best vv if needed
-    [~, ind] = min(mean(avg_delay_tot(avg_sample:end, :, :), [1, 2]), [], 2);
-    V = V1(ind);
-    energy_tot = squeeze(energy_tot(:, ind));
-    avg_delay_tot = squeeze(avg_delay_tot(:, :, ind));
 
 end
 
