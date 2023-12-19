@@ -1,8 +1,36 @@
 function [energy_tot, avg_delay_tot] = rismec_control_ce( ...
-    f_max, tau, perc, N_blocks, qtz_RIS, weights, possible_angles, ...
+    f_max, tau, perc, N_blocks, qtz_RIS, bf_weights, ...
     channel_ris_ap, channel_ue_ap, channel_ue_ris, error_prob, ...
     tti_time, conf_codebook_size, N_pilot, f_ra, tau_ra, avg_arrival_rate, ...
-    V1, discount, ce_error_bool)
+    lyap_parameter_vector, discount, ce_error_bool)
+
+    % Compute system performance for a single setup and variable under test
+    % In the following, the parameters with the LaTeX name of the variable 
+    % in the paper between paranthesis 
+    %
+    % f_max - ES maximum frequency [Hz]
+    % tau - slot duration [s]
+    % perc - percentage of time dedicate to offload (tau_pay = perc * tau)
+    % N_blocks - number of RIS blocks (N_blocks = N / N_g)
+    % qtz_RIS - number of bit for phase shift quantization (b)
+    % bf_weights - matrix M x L of possible beamformer weights (each column
+    % is \mathbf{w}(t) \in \mathcal{C}_{ap})
+    % channel_ris_ap - M x N x N_slot RIS to AP channel coefficients
+    % channel_ue_ap - M x K x N_slot UEs to AP channel coefficients
+    % channel_ue_ris - N x K x N_slot UEs to RIS channel coefficients
+    % error_prob - 4 x 1 vector containing error probability for INI-U,
+    % INI-R, SET-U, SET-R control packets (p_i^k)
+    % tti_time - minimum granularity time [s] (T)
+    % conf_codebook_size - cardinality of CE codebook (C_{ce})
+    % N_pilot - number of pilot repetition for CE (N_p)
+    % f_ra - ES frequency allocated for RA task 
+    % tau_ra - ES time for RA
+    % avg_arrival_rate - arrival rate of packets in [bit/s] (\bar{A}_k)
+    % lyapun_parameter_vector - vector of possible Lyapunov parameters
+    % discount - discount factor for rate allocation (\eta)
+    % ce_error_bool - boolean: if True error in CE is considered, else
+    % perfect CSI is assumed
+
 
     %% Test Probability Vector
     if (length(error_prob) ~= 4)
@@ -58,20 +86,20 @@ function [energy_tot, avg_delay_tot] = rismec_control_ce( ...
     
     %% Simulation variables
     % Energy
-    energy_tot_ues = zeros(K, N_slot, length(V1)); 
-    energy_tot_es = zeros(N_slot, length(V1));
+    energy_tot_ues = zeros(K, N_slot, length(lyap_parameter_vector)); 
+    energy_tot_es = zeros(N_slot, length(lyap_parameter_vector));
     energy_tot_ap = energy_tot_es;
     energy_tot_ris = energy_tot_es; 
-    energy_tot = zeros(N_slot, length(V1));
+    energy_tot = zeros(N_slot, length(lyap_parameter_vector));
 
     % Queues and delay
-    avg_delay_tot = zeros(K, N_slot, length(V1));
-    es_virtual_queue_total = zeros(K, N_slot, length(V1));  % useless ??
-    tot_queues_ue = zeros(K, N_slot, length(V1));         % Total real queue    
-    ue_comm_queue = zeros(K, N_slot, length(V1));         % UE's local communication queue    
-    es_comp_queue = zeros(K, N_slot, length(V1));         % ES' computation queue
-    es_comm_queue = zeros(K, N_slot, length(V1));         % UE's communication queue known by the ES (estimated)       
-    es_virtual_queue = zeros(K, N_slot, length(V1));      % ES' virtual communication queue (estimated)     
+    avg_delay_tot = zeros(K, N_slot, length(lyap_parameter_vector));
+    es_virtual_queue_total = zeros(K, N_slot, length(lyap_parameter_vector));  % useless ??
+    tot_queues_ue = zeros(K, N_slot, length(lyap_parameter_vector));         % Total real queue    
+    ue_comm_queue = zeros(K, N_slot, length(lyap_parameter_vector));         % UE's local communication queue    
+    es_comp_queue = zeros(K, N_slot, length(lyap_parameter_vector));         % ES' computation queue
+    es_comm_queue = zeros(K, N_slot, length(lyap_parameter_vector));         % UE's communication queue known by the ES (estimated)       
+    es_virtual_queue = zeros(K, N_slot, length(lyap_parameter_vector));      % ES' virtual communication queue (estimated)     
 
     % Prepare to save previous values
     prev_ue_rate = zeros(K, 1);            % previous UE's rate
@@ -108,10 +136,10 @@ function [energy_tot, avg_delay_tot] = rismec_control_ce( ...
 
     %% Optimization Algorithm
     % Loop over trade-off parameter V 
-    for vv = 1:length(V1)
+    for vv = 1:length(lyap_parameter_vector)
         
         % Get current trade-off parameter
-        V = V1(vv);              
+        V = lyap_parameter_vector(vv);              
         
         % Loop over the slots
         for nn = 1:N_slot            
@@ -171,7 +199,7 @@ function [energy_tot, avg_delay_tot] = rismec_control_ce( ...
 
             % Channel estimation error         
             if ce_error_bool
-                hat_direct_channel = true_direct_channel + ce_error_direct(:, :, nn);
+                hat_direct_channel = true_direct_channel;% + ce_error_direct(:, :, nn);
                 hat_reflected_channel = true_reflected_channel + ce_error_reflected(:, :, :, nn);
             else
                 hat_direct_channel = true_direct_channel;
@@ -184,7 +212,7 @@ function [energy_tot, avg_delay_tot] = rismec_control_ce( ...
                 es_comm_queue(:, nn, vv), es_comp_queue(:, nn, vv), es_virtual_queue(:, nn, vv), ...
                 qtz_RIS, N, N_blocks, ...
                 hat_direct_channel, hat_reflected_channel, ...
-                N0, V, Pt, possible_f, J, tau_pay, p_bit, kappa, sigma, possible_angles, weights);
+                N0, V, Pt, possible_f, J, tau_pay, p_bit, kappa, sigma, bf_weights);
 
             % Use discount to avoid rate > capacity
             ue_rate = ue_rate * discount;
@@ -210,9 +238,9 @@ function [energy_tot, avg_delay_tot] = rismec_control_ce( ...
             %%% SET-R
             % If SET-R is lost the RISC loads the previous configuration                
             if pkt_lost_set_r
-                ue_capacity = eval_rate(true_channel_ue_ris, true_channel_ris_ap, true_direct_channel, N0, B_u, prev_ris_config, weights(:, ap_opt_beam), ue_power);
+                ue_capacity = eval_rate(true_channel_ue_ris, true_channel_ris_ap, true_direct_channel, N0, B_u, prev_ris_config, bf_weights(:, ap_opt_beam), ue_power);
             else
-                ue_capacity = eval_rate(true_channel_ue_ris, true_channel_ris_ap, true_direct_channel, N0, B_u, ris_config, weights(:, ap_opt_beam), ue_power);
+                ue_capacity = eval_rate(true_channel_ue_ris, true_channel_ris_ap, true_direct_channel, N0, B_u, ris_config, bf_weights(:, ap_opt_beam), ue_power);
             end
 
             %% Phase 4: Payload                  
@@ -244,4 +272,3 @@ function [energy_tot, avg_delay_tot] = rismec_control_ce( ...
     end
 
 end
-

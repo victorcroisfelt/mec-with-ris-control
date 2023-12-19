@@ -92,14 +92,14 @@ figure(99);
 sgtitle('Overall performance CE', 'interpreter', 'latex')
 subplot(2, 2, 1);
 title('$N_g = 2$', 'interpreter', 'latex')
-plot(conf_codebook_size, squeeze(E_avg(1, ind_dis, :, :))); 
+plot(conf_codebook_size, squeeze(E_avg(1, :, 2, :))); 
 grid on;
 xlabel('$C_\mathrm{ce}$', 'interpreter', 'latex')        
 ylabel('$E_\sigma^\mathrm{tot}(t)$ [J]', 'interpreter', 'latex'); 
-legend(lab_arr, 'Interpreter','latex');
+legend(lab_dis, 'Interpreter','latex');
   
 subplot(2, 2, 3);
-plot(conf_codebook_size, squeeze(L_avg(1, ind_dis, :, :)) / 1000);
+plot(conf_codebook_size, squeeze(L_avg(1, :, 2, :)) / 1000);
 grid on;
 xlabel('$C_\mathrm{ce}$', 'interpreter', 'latex')        
 ylabel('$\max_{k\in\mathcal{K}} L_k(t)$ [s]', 'interpreter', 'latex'); 

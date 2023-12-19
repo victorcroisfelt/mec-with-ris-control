@@ -3,7 +3,7 @@ clear all; close all; clc;
 %% Common values
 M = 8;
 N = 64;
-K = 2;
+K = 4;
 
 save_dir = 'data/plots/';
 
@@ -62,8 +62,8 @@ for error_code = 0:3
     % savefig([save_dir, 'oneshot_', 'N', num2str(N), '_M', num2str(M), '_K', num2str(K), '_', error_type]);
 
     %%% Load average results
-    L = squeeze(mean(max(avg_delay(1, :,:,:,end-M_sample:end, 1), [], 4), [2, 5]));
-    E = squeeze(mean(total_energy(1, :,:,end-M_sample:end, 1), [2, 4])) * 1000;
+    L = squeeze(mean(max(avg_delay(2, :,:,:,end-M_sample:end, 1), [], 4), [2, 5]));
+    E = squeeze(mean(total_energy(2, :,:,end-M_sample:end, 1), [2, 4])) * 1000;
 
     figure(5);
     subplot(2, 1, 1);

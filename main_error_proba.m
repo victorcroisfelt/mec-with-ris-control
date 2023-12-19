@@ -19,7 +19,6 @@ N_blocks = N/2;
 
 % Load receive combining (CHECK THE CORRESPONDING N_AP)
 load(['data/combining/w_candidates_' num2str(M) '_antennas.mat'], 'weights')
-possible_angles = size(weights, 2);
 
 % Number of bits used to quantize the phase of the RIS
 qtz_RIS = 1; 
@@ -115,13 +114,13 @@ for rr = 1:num_setups
         fprintf('\tarrival %02d/%02d\n', aa, num_arrival)
     
         % Go through all probability points
-        parfor nn = 1:num_points       
+        for nn = 1:num_points       
             fprintf('\t\tpoint = %02d/%02d\n', nn, num_points)
     
             % Optmize control
             [total_energy(aa, rr, nn, :, :), avg_delay(aa, rr, nn, :, :, :)] = ...
             rismec_control_ce(f_max, tau, perc, ...
-                N_blocks, qtz_RIS, weights, possible_angles, ...
+                N_blocks, qtz_RIS, weights, ...
                 current_channel_ris_ap, current_channel_ue_ap, current_channel_ue_ris, ...
                 error_prob_matrix(nn, :), tti_time, conf_codebook_size, N_p, f_ra, tau_ra, arr_avg, lyapunov_tradeoff, ...
                 1, false);

@@ -15,7 +15,6 @@ disp('---------------------------')
 
 % Load receive combining (CHECK THE CORRESPONDING N_AP)
 load(['data/combining/w_candidates_' num2str(M) '_antennas.mat'], 'weights')
-possible_angles = size(weights, 2);
 
 % Number of bits used to quantize the phase of the RIS
 qtz_RIS = 1; 
@@ -34,7 +33,7 @@ ris_cc = 'ib-cc';
 % ris_cc = 'ob-cc';
 
 %% discount
-discount_vec = 0.1:0.2:1;
+discount_vec = 0.9; 0.1:0.2:1;
 
 for discount = discount_vec
 
@@ -70,7 +69,7 @@ tti_time = constant * 1/14 * 10e-3;
 
 
 %% Arrival rate and Lyapunov
-avg_arrival_rate = [50, 100, 200, 500]*1e3;    % bit/s arrival rate corrisponding to 500 and 10000 average arrival bit at 100 ms of frame
+avg_arrival_rate = [1, 100, 200, 500]*1e3;    % bit/s arrival rate corrisponding to 500 and 10000 average arrival bit at 100 ms of frame
 num_arrival = length(avg_arrival_rate);
 
 lyapunov_tradeoff = [1e8];   % Lyapunov trade-off parameters
@@ -118,7 +117,7 @@ for rr = 1:num_setups
         fprintf('\tarrival %02d/%02d\n', aa, num_arrival)
 
         % Go through all taus
-        parfor nn = 1:num_points
+        for nn = 1:num_points
            fprintf('\t\tpoint = %02d/%02d\n', nn, num_points)   
             
             % Recompute percentage of slot duration dedicated to offloading
@@ -130,7 +129,7 @@ for rr = 1:num_setups
             % Optmize control
             [total_energy(aa, rr, nn, :, :), avg_delay(aa, rr, nn, :, :, :)] = ...
             rismec_control_ce(f_max, tau, perc, ...
-                N_blocks, qtz_RIS, weights, possible_angles, ...
+                N_blocks, qtz_RIS, weights, ...
                 current_channel_ris_ap, current_channel_ue_ap, current_channel_ue_ris, ...
                 error_prob, tti_time, conf_codebook_size_now, N_p, f_ra, tau_ra, avg_arrival, lyapunov_tradeoff, ...
                 discount, true);
