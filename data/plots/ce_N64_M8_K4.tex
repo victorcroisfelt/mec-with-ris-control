@@ -1,0 +1,261 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.92900,0.69400,0.12500}%
+\definecolor{mycolor4}{rgb}{0.49400,0.18400,0.55600}%
+\definecolor{mycolor5}{rgb}{0.46600,0.67400,0.18800}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=1.952in,
+height=1.451in,
+at={(0.758in,2.492in)},
+scale only axis,
+xmin=60,
+xmax=128,
+xlabel style={font=\color{white!15!black}},
+xlabel={$C_\mathrm{ce}$},
+ymin=0,
+ymax=0.3,
+ylabel style={font=\color{white!15!black}},
+ylabel={$E_\sigma^\mathrm{tot}(t)$ [J]},
+axis background/.style={fill=white},
+xmajorgrids,
+ymajorgrids,
+legend style={legend cell align=left, align=left, draw=white!15!black}
+]
+\addplot [color=mycolor1]
+  table[row sep=crcr]{%
+64	0.0335120028684774\\
+80	0.0344164765948507\\
+96	0.0421439878385395\\
+112	0.104856541711509\\
+128	0.0462389347196486\\
+};
+\addlegendentry{$\mu = $ 0.1}
+
+\addplot [color=mycolor2]
+  table[row sep=crcr]{%
+64	0.0459822548032234\\
+80	0.0461102255362508\\
+96	0.0517047894525786\\
+112	0.116696049617972\\
+128	0.0796872529146348\\
+};
+\addlegendentry{$\mu = $ 0.3}
+
+\addplot [color=mycolor3]
+  table[row sep=crcr]{%
+64	0.0699300651512684\\
+80	0.0715574956453651\\
+96	0.0780706535406401\\
+112	0.141163607502573\\
+128	0.149577716059976\\
+};
+\addlegendentry{$\mu = $ 0.5}
+
+\addplot [color=mycolor4]
+  table[row sep=crcr]{%
+64	0.163702359413277\\
+80	0.165761540388707\\
+96	0.17991190030339\\
+112	0.24520340898755\\
+128	0.288990906143447\\
+};
+\addlegendentry{$\mu = $ 0.7}
+
+\addplot [color=mycolor5]
+  table[row sep=crcr]{%
+64	0.216631046769824\\
+80	0.216593358620242\\
+96	0.216586694154289\\
+112	0.216587422777956\\
+128	0.216596457356067\\
+};
+\addlegendentry{$\mu = $ 0.9}
+
+\end{axis}
+
+\begin{axis}[%
+width=1.952in,
+height=1.451in,
+at={(0.758in,0.472in)},
+scale only axis,
+xmin=60,
+xmax=128,
+xlabel style={font=\color{white!15!black}},
+xlabel={$C_\mathrm{ce}$},
+ymode=log,
+ymin=0.3,
+ymax=7.23157390417647,
+yminorticks=true,
+ylabel style={font=\color{white!15!black}},
+ylabel={$\max_{k\in\mathcal{K}} L_k(t)$ [s]},
+axis background/.style={fill=white},
+xmajorgrids,
+ymajorgrids,
+yminorgrids
+]
+\addplot [color=mycolor1, forget plot]
+  table[row sep=crcr]{%
+64	1.12609285730741\\
+80	0.493328507013741\\
+96	0.643122317222585\\
+112	3.26458601689545\\
+128	7.23157390417647\\
+};
+\addplot [color=mycolor2, forget plot]
+  table[row sep=crcr]{%
+64	1.12145018498343\\
+80	0.473525915759457\\
+96	0.46237954306067\\
+112	1.5236186368344\\
+128	6.6039258291233\\
+};
+\addplot [color=mycolor3, forget plot]
+  table[row sep=crcr]{%
+64	1.11784262454337\\
+80	0.469323999004947\\
+96	0.405521654413671\\
+112	0.886315622082248\\
+128	5.05523959325016\\
+};
+\addplot [color=mycolor4, forget plot]
+  table[row sep=crcr]{%
+64	1.11738680510845\\
+80	0.462093723107117\\
+96	0.379704571168102\\
+112	0.653883530749783\\
+128	3.14250416640866\\
+};
+\addplot [color=mycolor5, forget plot]
+  table[row sep=crcr]{%
+64	4.30482412007327\\
+80	4.22353452705462\\
+96	4.20858801865869\\
+112	4.2303424940031\\
+128	4.46613563195919\\
+};
+\addplot [color=black, dashed, forget plot]
+  table[row sep=crcr]{%
+64	0.3\\
+128	0.3\\
+};
+\end{axis}
+
+\begin{axis}[%
+width=1.952in,
+height=1.451in,
+at={(3.327in,2.492in)},
+scale only axis,
+xmin=60,
+xmax=128,
+xlabel style={font=\color{white!15!black}},
+xlabel={$C_\mathrm{ce}$},
+ymin=0,
+ymax=2,
+ylabel style={font=\color{white!15!black}},
+ylabel={$E_\sigma^\mathrm{tot}(t)$ [J]},
+axis background/.style={fill=white},
+xmajorgrids,
+ymajorgrids
+]
+\addplot [color=mycolor1, forget plot]
+  table[row sep=crcr]{%
+64	0.0222276133116876\\
+80	0.0255192306918951\\
+96	0.0309382262126778\\
+112	0.0458886575541935\\
+128	0.195557416594766\\
+};
+\addplot [color=mycolor2, forget plot]
+  table[row sep=crcr]{%
+64	0.037613103404266\\
+80	0.0479313184709306\\
+96	0.0748683880218333\\
+112	0.176798087048161\\
+128	0.195565256878744\\
+};
+\addplot [color=mycolor3, forget plot]
+  table[row sep=crcr]{%
+64	0.156078999415603\\
+80	0.222716180363559\\
+96	0.418228967136615\\
+112	0.714009886144257\\
+128	0.195580801957631\\
+};
+\addplot [color=mycolor4, forget plot]
+  table[row sep=crcr]{%
+64	1.79378827430426\\
+80	1.75090823953086\\
+96	1.23248155393852\\
+112	0.714055531171572\\
+128	0.195640873655361\\
+};
+\end{axis}
+
+\begin{axis}[%
+width=1.952in,
+height=1.451in,
+at={(3.327in,0.472in)},
+scale only axis,
+xmin=60,
+xmax=128,
+xlabel style={font=\color{white!15!black}},
+xlabel={$C_\mathrm{ce}$},
+ymode=log,
+ymin=0.3,
+ymax=6.91602006101557,
+yminorticks=true,
+ylabel style={font=\color{white!15!black}},
+ylabel={$\max_{k\in\mathcal{K}} L_k(t)$ [s]},
+axis background/.style={fill=white},
+xmajorgrids,
+ymajorgrids,
+yminorgrids
+]
+\addplot [color=mycolor1, forget plot]
+  table[row sep=crcr]{%
+64	0.762182682394986\\
+80	0.538949647222442\\
+96	0.504948412380338\\
+112	0.487372725889646\\
+128	1.76462157978824\\
+};
+\addplot [color=mycolor2, forget plot]
+  table[row sep=crcr]{%
+64	0.737352962078176\\
+80	0.539217556398043\\
+96	0.505435948068534\\
+112	0.486713439379024\\
+128	4.58817937811267\\
+};
+\addplot [color=mycolor3, forget plot]
+  table[row sep=crcr]{%
+64	0.718986598636972\\
+80	0.534402132568748\\
+96	0.503309535645807\\
+112	1.59651447741187\\
+128	6.03755262924105\\
+};
+\addplot [color=mycolor4, forget plot]
+  table[row sep=crcr]{%
+64	0.64050648014989\\
+80	1.58217155744295\\
+96	3.30327092942598\\
+112	5.08975931656364\\
+128	6.91602006101557\\
+};
+\addplot [color=black, dashed, forget plot]
+  table[row sep=crcr]{%
+64	0.3\\
+128	0.3\\
+};
+\end{axis}
+\end{tikzpicture}%

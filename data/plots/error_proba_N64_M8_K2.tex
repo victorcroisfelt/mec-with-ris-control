@@ -1,0 +1,232 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.92900,0.69400,0.12500}%
+\definecolor{mycolor4}{rgb}{0.49400,0.18400,0.55600}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=4.602in,
+height=1.416in,
+at={(0.772in,2.519in)},
+scale only axis,
+xmode=log,
+xmin=0.001,
+xmax=1,
+xminorticks=true,
+xlabel style={font=\color{white!15!black}},
+xlabel={error probability $p_k^i$},
+ymin=9.282,
+ymax=9.28513776873493,
+ylabel style={font=\color{white!15!black}},
+ylabel={Total Energy $E_\sigma^\mathrm{tot}$ [mJ]},
+axis background/.style={fill=white},
+axis x line*=bottom,
+axis y line*=left,
+xmajorgrids,
+xminorgrids,
+ymajorgrids,
+legend style={legend cell align=left, align=left, draw=white!15!black}
+]
+\addplot [color=black, dashed]
+  table[row sep=crcr]{%
+0.001	9.2822389615357\\
+0.99	9.2822389615357\\
+};
+\addlegendentry{error-free}
+
+\addplot [color=mycolor1]
+  table[row sep=crcr]{%
+0.001	9.28221217707851\\
+0.01	9.28221846622231\\
+0.1	9.28227849298693\\
+0.2	9.28229555107678\\
+0.3	9.28231415905135\\
+0.4	9.2822522917939\\
+0.5	9.28223898654345\\
+0.6	9.28222671317772\\
+0.7	9.28223620699772\\
+0.8	9.28230016510307\\
+0.9	9.2823542879398\\
+0.99	9.28241501872654\\
+};
+\addlegendentry{INI-U}
+
+\addplot [color=mycolor2]
+  table[row sep=crcr]{%
+0.001	9.28231855818488\\
+0.01	9.28238263013302\\
+0.1	9.28254780083249\\
+0.2	9.28276916024086\\
+0.3	9.28298476144324\\
+0.4	9.28316531110055\\
+0.5	9.28335264371403\\
+0.6	9.28344524028308\\
+0.7	9.28348569835732\\
+0.8	9.28364305345067\\
+0.9	9.28458580075898\\
+0.99	9.28513776873493\\
+};
+\addlegendentry{INI-R}
+
+\addplot [color=mycolor3]
+  table[row sep=crcr]{%
+0.001	9.28224906295825\\
+0.01	9.28234354131605\\
+0.1	9.28244568336724\\
+0.2	9.28256286011551\\
+0.3	9.28278933758146\\
+0.4	9.28305684536638\\
+0.5	9.28334576220435\\
+0.6	9.2836453537241\\
+0.7	9.28390797329152\\
+0.8	9.28405631622155\\
+0.9	9.28417590992119\\
+0.99	9.28426049638708\\
+};
+\addlegendentry{SET-U}
+
+\addplot [color=mycolor4]
+  table[row sep=crcr]{%
+0.001	9.28234652279939\\
+0.01	9.2824568016412\\
+0.1	9.2825646186056\\
+0.2	9.28265855122278\\
+0.3	9.28286420828335\\
+0.4	9.28307229827977\\
+0.5	9.2832536220428\\
+0.6	9.28340205712907\\
+0.7	9.28354632604354\\
+0.8	9.28376909158483\\
+0.9	9.28384613725543\\
+0.99	9.28391457161362\\
+};
+\addlegendentry{SET-R}
+
+\end{axis}
+
+\begin{axis}[%
+width=4.602in,
+height=1.416in,
+at={(0.772in,0.503in)},
+scale only axis,
+xmode=log,
+xmin=0.001,
+xmax=1,
+xminorticks=true,
+xlabel style={font=\color{white!15!black}},
+xlabel={error probability $p_k^i$},
+ymode=log,
+ymin=231.73514869707,
+ymax=2214.67636588484,
+yminorticks=true,
+ylabel style={font=\color{white!15!black}},
+ylabel={Avg. latency [ms]},
+axis background/.style={fill=white},
+axis x line*=bottom,
+axis y line*=left,
+xmajorgrids,
+xminorgrids,
+ymajorgrids,
+yminorgrids,
+legend style={legend cell align=left, align=left, draw=white!15!black}
+]
+\addplot [color=black, dashed]
+  table[row sep=crcr]{%
+0.001	231.943374401186\\
+0.99	231.943374401186\\
+};
+\addlegendentry{error-free}
+
+\addplot [color=mycolor1]
+  table[row sep=crcr]{%
+0.001	231.935706082793\\
+0.01	232.586124777179\\
+0.1	239.99103900594\\
+0.2	246.772027098723\\
+0.3	254.457184076542\\
+0.4	261.873520564214\\
+0.5	269.000846477916\\
+0.6	275.655331553698\\
+0.7	282.967160248972\\
+0.8	290.170224266714\\
+0.9	296.884377706552\\
+0.99	301.10564692582\\
+};
+\addlegendentry{INI-U}
+
+\addplot [color=mycolor2]
+  table[row sep=crcr]{%
+0.001	231.985518923464\\
+0.01	231.76384889432\\
+0.1	234.196965206291\\
+0.2	236.992343682174\\
+0.3	239.967871732478\\
+0.4	243.980857841703\\
+0.5	257.782213531122\\
+0.6	279.603188386515\\
+0.7	320.794360896444\\
+0.8	445.10795507668\\
+0.9	680.560496950603\\
+0.99	1954.84892348846\\
+};
+\addlegendentry{INI-R}
+
+\addplot [color=mycolor3]
+  table[row sep=crcr]{%
+0.001	231.955152876327\\
+0.01	232.130497589645\\
+0.1	233.953896772108\\
+0.2	236.243607726193\\
+0.3	238.516614595737\\
+0.4	242.907426069134\\
+0.5	251.477124688764\\
+0.6	272.383001241256\\
+0.7	316.068457741695\\
+0.8	442.395610733977\\
+0.9	764.04103959561\\
+0.99	2214.67636588484\\
+};
+\addlegendentry{SET-U}
+
+\addplot [color=mycolor4]
+  table[row sep=crcr]{%
+0.001	231.73514869707\\
+0.01	232.004006963159\\
+0.1	234.565555705875\\
+0.2	236.680983964802\\
+0.3	239.30991983518\\
+0.4	245.436666735328\\
+0.5	256.811037595878\\
+0.6	273.579970570636\\
+0.7	310.84947194751\\
+0.8	415.939708554856\\
+0.9	676.516545180994\\
+0.99	1922.47802036591\\
+};
+\addlegendentry{SET-R}
+
+\end{axis}
+
+\begin{axis}[%
+width=5.938in,
+height=4.302in,
+at={(0in,0in)},
+scale only axis,
+xmin=0,
+xmax=1,
+ymin=0,
+ymax=1,
+axis line style={draw=none},
+ticks=none,
+axis x line*=bottom,
+axis y line*=left
+]
+\end{axis}
+\end{tikzpicture}%
